@@ -1,22 +1,18 @@
 package mrtb
-import net.scage.ScageScreenApp
-import net.scage.ScageLib._
+
+import scala.swing.SimpleSwingApplication
 
 /**
- * An executable object that initializes the game.
- * 
- * TODO: everything
- * 
+ * An executable object that initializes the game, setting up the interface and manager.
  */
 
-object Game {
+object Game extends SimpleSwingApplication {
   
-  final val TILESIZE = 32
-  final val GRIDSIZE = (16, 12)
+  Manager.initialize
+  val interface = new mrtb.gui.GUI
   
-  def main(args: Array[String]) {
-    println("hi")
-    
-  }
+  def main = super.main(null)
+  
+  def top = interface.top
   
 }

@@ -6,18 +6,13 @@ package mrtb
 
 object Manager {
   
-}
-
-
-/**
- * Timer is an object that keeps track of the frames passed, deals with notifications and
- * updates the reload timings on towers etc.
- */
-
-object Timer extends Thread {
-  def run() = {
-    val start = System.nanoTime()
-    var frames = 0
+  final val TILESIZE = 32
+  final val GRIDSIZE = (16, 12)
+  
+  def initialize = {
+    Stage.loadStages(".\\stages")
+    
     
   }
+ 
 }
