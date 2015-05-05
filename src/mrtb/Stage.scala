@@ -8,16 +8,18 @@ import java.io.File
  * containing the relevant enemies and towers.
  */
 
-class Stage (fileName: String) {
-  
+class Stage(fileName: String) {
+
 }
 
-
 object Stage {
+
   // load the stages when initialized
   def loadStages(directory: String) = {
-    for (x <- new File(directory).listFiles()
-    		.filter(_.getName().takeRight(4) == ".txt"))
-      null
+    if (new File(directory).exists()) {
+      for (x <- new File(directory).listFiles().filter(_.getName().takeRight(4) == ".txt"))
+        0
+    }
   }
+
 }

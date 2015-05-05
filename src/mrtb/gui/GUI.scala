@@ -15,9 +15,13 @@ import java.awt.Dimension
  * one or two hours.
  * 
  * As for the implementation here, the game's GUI essentially consists of two screens - the main menu
- * and the actual gameplay. The two panel that represent them is created right away, and then
- * various elements are painted on the panel. Due to time restrictions, there might be some discrepancy
- * between Scala and Java style implementations regarding Swing and the event handling.
+ * and the actual gameplay. The panel that represents them is the singleton object called GameScreen, and
+ * the various UI elements are painted on the panel. Due to time restrictions, there might be some discrepancy
+ * between Scala and Java style implementations regarding Swing and the event handling. I aimed to create a
+ * completely graphical UI, with as little reliance on Swing's components as possible. I know that this has
+ * a lot of downsides, but feel the most comfortable implementing such an interface, and it's definitely
+ * the most powerful option available, if a bit resource-intensive. (Relying on Graphics2D might be pushing
+ * it performance-wise, but at this point I feel like it's justifiable.)
  * 
  * If there was more time, I'd create an abstract class that would make implementing other UIs easier.
  * Right now, extensibility by modifying or adding code is not one of my top priorities, although
@@ -27,13 +31,13 @@ import java.awt.Dimension
 abstract class SwingInterface extends MainFrame {
   def enterMenu
   def enterGame
-  def update
+  def update = this.repaint()
 }
 
-class GUI extends MainFrame {
+class GUI (width: Int, height: Int) extends MainFrame {
   
   // Initialization
-  this.preferredSize = new Dimension(800, 480)
+  this.preferredSize = new Dimension(width, height)
   this.contents = GameScreen
   this.resizable = false
   this.title = "Tower Battles ver 0.0.08"
@@ -42,11 +46,14 @@ class GUI extends MainFrame {
   this.repaint()
   this.visible = true
   
-  // Various functions.
+  // Various functions
   def top: MainFrame = this
   def enterMenu = GameScreen.enterMenu
   def enterGame = GameScreen.enterGame
   def update = this.repaint()
+  
+  // Event handling
+  this.listenTo(GameScreen)
   
 }
 
