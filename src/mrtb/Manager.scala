@@ -16,10 +16,11 @@ object Manager {
 
   final val TILESIZE = 32
   final val GRIDSIZE = (18, 11)
+  final val STAGEDIRECTORY = ".\\stages\\"
 
   // Variables to hold the game system's internal state.
   var gameState = "init"
-  var stagelist: Buffer[String] = Stage.listStages(".\\stages")
+  var stagelist: Buffer[String] = Stage.listStages(STAGEDIRECTORY)
   var currentStage: Stage = null
 
   // The GUI is designed to be 800x480; don't change these values!
@@ -30,10 +31,13 @@ object Manager {
   }
 
   def loadStage(id: String) = {
+    println(stagelist)
     if (stagelist.contains(id)) {
-      currentStage = Stage.createStage(id)
+      currentStage = Stage.createStage(id, STAGEDIRECTORY)
       gameState = "game_prewave"
       interface.enterGame
+    } else {
+      throw new IllegalArgumentException("Tried to load a stage with an id that doesn't exist!!!")
     }
   }
 

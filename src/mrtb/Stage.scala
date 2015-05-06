@@ -9,14 +9,17 @@ import scala.collection.mutable.Buffer
  * containing the relevant enemies and towers.
  */
 
-class Stage(fileName: String) {
+class Stage(waveAmount: Int) {
   // Some variables are created to hold the relevant game-state information.
   // They are initialized here and overwritten by values specified in the stage file.
   var lives = 10
   var currentWave = 1
   var betweenWaves = true
   var gold = 200
+  var score = 0
+  var timeLeft = 30
   val tiles = Array.ofDim[Tile](Manager.GRIDSIZE._1, Manager.GRIDSIZE._2)
+  val waves = Array.ofDim[Wave](waveAmount)
 }
 
 object Stage {
@@ -29,32 +32,39 @@ object Stage {
     // Those text files are then checked for validity and loaded.
     if (new File(directory).exists()) {
       for (
-        x <- new File(directory).listFiles()							// Files in the stage directory are listed,
-          .filter(_.isDirectory()).map(_.listFiles).flatten				// filtered for directories, then mapped for their contents,
-          .filter(a => a.getName().takeRight(4) == ".txt" && a.isFile)  // and finally filtered to look for text files.
-          ++ new File(directory).listFiles()							// The base directory's contents are then concatenated to the result.
-          .filter(a => a.getName().takeRight(4) == ".txt" && a.isFile) 
+        x <- new File(directory).listFiles() // Files in the stage directory are listed,
+          .filter(_.isDirectory()).map(_.listFiles).flatten // filtered for directories, then mapped for their contents,
+          .filter(a => a.getName().takeRight(4) == ".txt" && a.isFile) // and finally filtered to look for text files.
+          ++ new File(directory).listFiles() // The base directory's contents are then concatenated to the result.
+          .filter(a => a.getName().takeRight(4) == ".txt" && a.isFile)
       ) {
-        println(x.getName)									// aaa
-        if (isValidStage(x.getName))
-          result += x.getName()
-        else println(x.getName() + " is not a valid stage") // aaa
+        if (isValidStage(x.getName)) {
+          result += x.getName().dropRight(4)
+          println(x.getName + " recognized as a valid stage")
+        } else println(x.getName() + " is not a valid stage") // aaa
       }
     } else {
-      println("The \'stages\' directory doesn't exist!!!")  // aaa
+      println("The \'stages\' directory doesn't exist!!!") // aaa
     }
 
     result
   }
 
   // A method to parse and load a single stage file, returning a Stage object.
-  def createStage(id: String): Stage = {
-    ???
+  def createStage(id: String, directory: String): Stage = {
+    val stageFile = new File(directory + id)
+    if (stageFile.getName() == "test.txt") {
+      new Stage(1)
+    } else {
+      new Stage(1) //todo
+    }
+    
   }
 
   // A method to check the validness of a stage file.
   def isValidStage(id: String): Boolean = {
-    ???
+    //todo
+    true
   }
 
 }

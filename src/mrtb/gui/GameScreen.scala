@@ -9,6 +9,7 @@ import scala.swing.event._
 import scala.swing.Button
 import java.awt.BasicStroke
 import java.awt.Font
+import java.awt.FontMetrics
 
 /**
  * A Panel that uses Graphics2D to paint the wanted images etc.
@@ -37,7 +38,10 @@ object GameScreen extends Panel {
   private val tileSize = GUI.manager.TILESIZE
   private val gridWidth = GUI.manager.GRIDSIZE._1
   private val gridHeight = GUI.manager.GRIDSIZE._2
-
+  
+  private val fm_SSP14 = this.peer.getFontMetrics(new Font("SansSerif", Font.PLAIN, 14))
+  private val fm_SSB14 = this.peer.getFontMetrics(new Font("SansSerif", Font.BOLD, 14))
+  
   // Initialization
   preferredSize = new Dimension(800, 480)
   repaint()
@@ -60,11 +64,11 @@ object GameScreen extends Panel {
       case "game" => {
         // First, the various background areas of major UI features are colored light grey.
         g.setColor(new Color(245, 245, 245))
-        g.fillRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight)
-        g.fillRect(size.width - 150, 30, 120, 70)		// Stat HUD
-        g.fillRect(size.width - 150, 120, 120, 200)		// Tower selector
-        g.fillRect(size.width - 150, 340, 120, 110)		// Selection info
-        g.fillRect(tileSize, 410, tileSize * gridWidth, 30) // Wave info
+        g.fillRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight)  // Game area
+        g.fillRect(size.width - 150, 32, 120, 70)			// Stat HUD
+        g.fillRect(size.width - 150, 122, 120, 200)			// Tower selector
+        g.fillRect(size.width - 150, 342, 120, 110)			// Selection info
+        g.fillRect(tileSize, tileSize * (gridHeight + 1) + 20, tileSize * gridWidth, 46) // Wave info
         
         // Then, entry and exit points for the enemies are added.
         g.setColor(new Color(255, 140, 140))
@@ -85,15 +89,28 @@ object GameScreen extends Panel {
         g.setColor(new Color(45, 45, 45))
         g.setStroke(new BasicStroke(2))
         g.drawRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight)
-        g.drawRect(size.width - 150, 30, 120, 70)
-        g.drawRect(size.width - 150, 120, 120, 200)
-        g.drawRect(size.width - 150, 340, 120, 110)
-        g.drawRect(tileSize, 410, tileSize * gridWidth, 30)
+        g.drawRect(size.width - 150, 32, 120, 70)
+        g.drawRect(size.width - 150, 122, 120, 200)
+        g.drawRect(size.width - 150, 342, 120, 110)
+        g.drawRect(tileSize, tileSize * (gridHeight + 1) + 20, tileSize * gridWidth, 46)
         
         // Text is added
         g.setColor(new Color(0, 0, 0))
+        g.setFont(new Font("SansSerif", Font.BOLD, 14))
+        g.drawString("Lives:", size.width - 135, 49)
+        g.drawString("Gold:", size.width - 135, 64)
+        g.drawString("Score:", size.width - 135, 79)
+        g.drawString("Time:", size.width - 135, 94)
+        
+        // Right alignment using the FontMetrics object
         g.setFont(new Font("SansSerif", Font.PLAIN, 14))
-        g.drawString(GUI.manager.currentStage.lives.toString, size.width - 140, 35)
+        g.drawString(GUI.manager.currentStage.lives.toString, size.width - 50 - fm_SSP14.stringWidth(GUI.manager.currentStage.lives.toString), 49)
+        g.drawString(GUI.manager.currentStage.gold.toString, size.width - 50 - fm_SSP14.stringWidth(GUI.manager.currentStage.gold.toString), 64)
+        g.drawString(GUI.manager.currentStage.score.toString, size.width - 50 - fm_SSP14.stringWidth(GUI.manager.currentStage.score.toString), 79)
+        g.drawString(GUI.manager.currentStage.timeLeft.toString, size.width - 50 - fm_SSP14.stringWidth(GUI.manager.currentStage.timeLeft.toString), 94)
+        
+        // The game field is drawn
+        //todo
         
       }
 
@@ -122,17 +139,18 @@ object GameScreen extends Panel {
   this.listenTo(mouse.clicks, mouse.moves, keys)
   
   this.reactions += {
-    case b: MouseClicked => {
+    case b: MouseReleased => {
       state match {
         case "menu" => {
-          println("reacted to MouseClicked in-menu; " + b)
+          println("reacted to MouseReleased in-menu; " + b)
           if (b.point.x < 100 && b.point.y < 120) {
         	GUI.manager.loadStage("test")
+        	println("opening stage \"test\", proceeding to game...")
           }
         }
 
         case "game" => {
-          println("reacted to MouseClicked in-game; " + b)
+          GUI.manager.currentStage.lives -= 1  //aaa
         }
 
         case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")

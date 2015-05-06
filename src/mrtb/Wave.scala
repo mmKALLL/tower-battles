@@ -1,0 +1,5 @@
+package mrtb
+
+class Wave {
+
+}
