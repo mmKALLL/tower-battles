@@ -13,8 +13,9 @@ class Tile (x: Int, y: Int, initialTower: Tower = null) {
   //todo: not empty if there are enemies in this tile
   def isEmpty: Boolean = placedTower == null && (???)
   
-  def getTower: Tower = ???
-  def setTower: Tower = ???
+  def getTower: Tower = placedTower
+  def setTower(tower: Tower) = placedTower = tower
+  def destroyTower = placedTower = null
   
   
 }

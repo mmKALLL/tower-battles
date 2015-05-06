@@ -8,6 +8,7 @@ import java.awt.Dimension
 import scala.swing.event._
 import scala.swing.Button
 import java.awt.BasicStroke
+import java.awt.Font
 
 /**
  * A Panel that uses Graphics2D to paint the wanted images etc.
@@ -65,11 +66,13 @@ object GameScreen extends Panel {
         g.fillRect(size.width - 150, 340, 120, 110)		// Selection info
         g.fillRect(tileSize, 410, tileSize * gridWidth, 30) // Wave info
         
-        // Then the game grid itself is squared in.
+        // Then, entry and exit points for the enemies are added.
         g.setColor(new Color(255, 140, 140))
         g.fillRect(tileSize, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
         g.setColor(new Color(140, 255, 140))
         g.fillRect(tileSize * gridWidth, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
+        
+        // The game grid itself is squared in.
         g.setColor(new Color(215, 215, 215))
         for (x <- 1 until GUI.manager.GRIDSIZE._1) {
           g.drawLine(tileSize * (x + 1), tileSize, tileSize * (x + 1), tileSize * (gridHeight + 1))
@@ -78,7 +81,7 @@ object GameScreen extends Panel {
           g.drawLine(tileSize, tileSize * (y + 1), tileSize * (gridWidth + 1), tileSize * (y + 1))
         }
         
-        // Then borders are added to the major UI elements.
+        // Borders are added to the major UI elements.
         g.setColor(new Color(45, 45, 45))
         g.setStroke(new BasicStroke(2))
         g.drawRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight)
@@ -87,7 +90,10 @@ object GameScreen extends Panel {
         g.drawRect(size.width - 150, 340, 120, 110)
         g.drawRect(tileSize, 410, tileSize * gridWidth, 30)
         
-        // Entry and exit points for 
+        // Text is added
+        g.setColor(new Color(0, 0, 0))
+        g.setFont(new Font("SansSerif", Font.PLAIN, 14))
+        g.drawString(GUI.manager.currentStage.lives.toString, size.width - 140, 35)
         
       }
 
@@ -121,7 +127,7 @@ object GameScreen extends Panel {
         case "menu" => {
           println("reacted to MouseClicked in-menu; " + b)
           if (b.point.x < 100 && b.point.y < 120) {
-        	GUI.manager.interface.enterGame
+        	GUI.manager.loadStage("test")
           }
         }
 

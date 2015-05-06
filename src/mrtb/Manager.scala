@@ -1,5 +1,7 @@
 package mrtb
 
+import scala.collection.mutable.Buffer
+
 /**
  * Manager is an object that brings together the UI and engine with various abstractions.
  *
@@ -14,13 +16,25 @@ object Manager {
 
   final val TILESIZE = 32
   final val GRIDSIZE = (18, 11)
-  
+
+  // Variables to hold the game system's internal state.
+  var gameState = "init"
+  var stagelist: Buffer[String] = Stage.listStages(".\\stages")
+  var currentStage: Stage = null
+
   // The GUI is designed to be 800x480; don't change these values!
   var interface = new mrtb.gui.GUI(800, 480)
 
   def initialize = {
-    Stage.loadStages(".\\stages")
-    
+    gameState = "menu"
+  }
+
+  def loadStage(id: String) = {
+    if (stagelist.contains(id)) {
+      currentStage = Stage.createStage(id)
+      gameState = "game_prewave"
+      interface.enterGame
+    }
   }
 
 }

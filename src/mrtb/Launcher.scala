@@ -5,7 +5,7 @@ package mrtb
  */
 
 object Launcher {
-  
+  // ensure r/w access
   def main(args: Array[String]) = {
     Manager.initialize
   }
