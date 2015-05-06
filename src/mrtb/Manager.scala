@@ -13,7 +13,9 @@ package mrtb
 object Manager {
 
   final val TILESIZE = 32
-  final val GRIDSIZE = (16, 10)
+  final val GRIDSIZE = (18, 11)
+  
+  // The GUI is designed to be 800x480; don't change these values!
   var interface = new mrtb.gui.GUI(800, 480)
 
   def initialize = {

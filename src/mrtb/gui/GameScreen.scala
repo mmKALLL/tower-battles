@@ -7,6 +7,7 @@ import scala.swing.Panel
 import java.awt.Dimension
 import scala.swing.event._
 import scala.swing.Button
+import java.awt.BasicStroke
 
 /**
  * A Panel that uses Graphics2D to paint the wanted images etc.
@@ -56,20 +57,41 @@ object GameScreen extends Panel {
       }
 
       case "game" => {
-        // First, the various background areas of major UI features are colored grey.
-        g.setColor(new Color(235, 235, 235))
-        g.fillRect(tileSize, tileSize, tileSize * (gridWidth + 1), tileSize * (gridHeight + 1))
-        g.fillRect(size.width - 150, 30, 120, 280)
-        for (x <- 0 until GUI.manager.GRIDSIZE._1; y <- 0 until GUI.manager.GRIDSIZE._2) {
-          ???
+        // First, the various background areas of major UI features are colored light grey.
+        g.setColor(new Color(245, 245, 245))
+        g.fillRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight)
+        g.fillRect(size.width - 150, 30, 120, 70)		// Stat HUD
+        g.fillRect(size.width - 150, 120, 120, 200)		// Tower selector
+        g.fillRect(size.width - 150, 340, 120, 110)		// Selection info
+        g.fillRect(tileSize, 410, tileSize * gridWidth, 30) // Wave info
+        
+        // Then the game grid itself is squared in.
+        g.setColor(new Color(255, 140, 140))
+        g.fillRect(tileSize, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
+        g.setColor(new Color(140, 255, 140))
+        g.fillRect(tileSize * gridWidth, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
+        g.setColor(new Color(215, 215, 215))
+        for (x <- 1 until GUI.manager.GRIDSIZE._1) {
+          g.drawLine(tileSize * (x + 1), tileSize, tileSize * (x + 1), tileSize * (gridHeight + 1))
         }
-        g.fillRect(15, 30, 80, 50)
-        g.setColor(new Color(0, 0, 0))
-        g.drawRect(15, 30, 80, 50)
-        g.drawString("game", 30, 50)
+        for (y <- 1 until GUI.manager.GRIDSIZE._2) {
+          g.drawLine(tileSize, tileSize * (y + 1), tileSize * (gridWidth + 1), tileSize * (y + 1))
+        }
+        
+        // Then borders are added to the major UI elements.
+        g.setColor(new Color(45, 45, 45))
+        g.setStroke(new BasicStroke(2))
+        g.drawRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight)
+        g.drawRect(size.width - 150, 30, 120, 70)
+        g.drawRect(size.width - 150, 120, 120, 200)
+        g.drawRect(size.width - 150, 340, 120, 110)
+        g.drawRect(tileSize, 410, tileSize * gridWidth, 30)
+        
+        // Entry and exit points for 
+        
       }
 
-      case _ => throw new Exception("GUI component \"GameScreen\" has illegal state")
+      case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")
     }
 
   }
@@ -91,27 +113,26 @@ object GameScreen extends Panel {
 
   // The event handlers; the most important ones are without a doubt MouseClicked, 
   // MouseMoved and KeyTyped. Pattern matching is used to determine type and results.
-  reactions += {
+  this.listenTo(mouse.clicks, mouse.moves, keys)
+  
+  this.reactions += {
     case b: MouseClicked => {
-      println("clicked")
       state match {
         case "menu" => {
-          println("clicked + state menu")
+          println("reacted to MouseClicked in-menu; " + b)
           if (b.point.x < 100 && b.point.y < 120) {
         	GUI.manager.interface.enterGame
-        	println("clicked in menu at <100, <120")
           }
         }
 
         case "game" => {
-
+          println("reacted to MouseClicked in-game; " + b)
         }
 
-        case _ => throw new Exception("GUI component \"GameScreen\" has illegal state")
+        case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")
       }
      repaint()
     }
-
   }
 
 }
