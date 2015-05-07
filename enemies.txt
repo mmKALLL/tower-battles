@@ -1,0 +1,21 @@
+!Tower Battles 1.0
+# A file that defines various enemies.
+# The 1.0 parser expects the variables to always be written in the same order.
+
+!defineunit
+id=greengoblin
+directions=LR_M
+image=greengoblin.png
+hp=70
+speed=6
+goldgain=10
+scoregain=10
+
+!defineunit
+id=slowblob
+image=slowblob.png
+directions=LRUD_R
+hp=140
+speed=2
+goldgain=15
+scoregain=10

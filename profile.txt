@@ -1,0 +1,4 @@
+# The player's nickname. Letters and numbers only! 
+!nick=mmKALLL
+
+# Other options regarding the player's profile might end up here.

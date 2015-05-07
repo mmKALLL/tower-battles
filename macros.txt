@@ -1,0 +1,36 @@
+# A setting file used for various macros. You are free to write your own, but
+# should follow the syntax exactly; see the examples.
+
+
+# A macro defining a "default" wave consisting of two goblin spawns.
+# Usage: writing {defaultwave} in a stage file essentially replaces the text
+# with the text defined here inbetween !!start and !!end.
+!macro
+id=defaultwave
+!!start
+!wave
+greengoblin, 8, 30, 0
+greengoblin, 6, 60, 30 * 8 + 60
+!!end
+
+
+# Additional usefulness is always a good thing, though. The system also manages
+# variables; there are used by calling, for example, {defaultwave_with_variables 30 10}.
+# See the documentation or consult the developer for more information and details.
+!macro
+id=defaultwave_with_variables
+vars=2
+!!start
+!wave
+greengoblin, 8, $0, 0
+greengoblin, 6, $1, $0 * 8 + $1
+!!end
+
+
+# Some more specific macros are defined here....
+
+
+
+
+
+

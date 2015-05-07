@@ -50,6 +50,8 @@ object GameScreen extends Panel {
   //  private val bg = new BufferedImage(800, 480, BufferedImage.TYPE_INT_RGB)
   //  private val g2 = bg.createGraphics()
   //  this.drawBackground
+  private var renderTimeTotal = 0L
+  private var frames = 0
 
   // Initialization
   preferredSize = new Dimension(800, 480)
@@ -58,6 +60,7 @@ object GameScreen extends Panel {
   
 
   override def paintComponent(g: Graphics2D) = {
+    val start = System.nanoTime()
     clear(g)
 
     state match {
@@ -127,7 +130,11 @@ object GameScreen extends Panel {
 
       case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")
     }
-
+    
+    frames += 1
+    if (frames % 300 == 0 && GUI.manager.debug)
+      println("Rendered a total of " + frames + " frames with an average of " + renderTimeTotal / frames / 1000 + "µs per frame at 30 FPS.")
+    renderTimeTotal += System.nanoTime() - start
   }
 
   def clear(g: Graphics2D) = {
@@ -152,10 +159,10 @@ object GameScreen extends Panel {
     case b: MouseReleased => {
       state match {
         case "menu" => {
-          println("reacted to MouseReleased in-menu; " + b)
-          if (b.point.x < 100 && b.point.y < 120) {
-            GUI.manager.loadStage("test")
-            println("opening stage \"test\", proceeding to game...")
+          if (GUI.manager.debug) println("reacted to MouseReleased in-menu; " + b)
+          if (b.point.x < 95 && b.point.y < 80) {
+            GUI.manager.loadStage("Test Map")
+            if (GUI.manager.debug) println("opening stage \"" + GUI.manager.currentStage.name + "\", proceeding to game...")
           }
         }
 

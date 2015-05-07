@@ -1,7 +1,9 @@
 package mrtb
 
-import scala.collection.mutable.Buffer
 import javax.swing.Timer
+import scala.collection.mutable.Buffer
+import scala.collection.mutable.Map
+import java.io.File
 
 /**
  * Manager is an object that brings together the UI and engine with various abstractions.
@@ -15,26 +17,33 @@ import javax.swing.Timer
 
 object Manager {
 
-  // Some constants.
+  // Some constants.  \\\\Do not alter.\\\\
   final val TILESIZE = 32
   final val GRIDSIZE = (18, 11)
   final val STAGEDIRECTORY = ".\\stages\\"
   final val FPS = 60
 
   // Variables to hold the game system's internal state.
-  // Possible states: init, menu, game_setup, game_wave, game_over
+  // Possible gamestates: init, menu, game_setup, game_wave, game_over
   var gameState = "init"
-  var stagelist: Buffer[String] = Stage.listStages(STAGEDIRECTORY)
+  var stagelist: Map[String, File] = null
   var currentStage: Stage = null
+  var debug = false
   
   // A timer to keep track with the real-time events ingame.
   val animationTimer = Ticker(33, true) { if(gameState.take(4) == "game") this.update }
 
   // The GUI is designed to be 800x480; don't change these values!
-  var interface = new mrtb.gui.GUI(800, 480)
+  var interface: mrtb.gui.GUI = null
 
-  def initialize = {
+  def initialize(args: Array[String]) = {
     gameState = "menu"
+    if (!args.isEmpty)
+      if (args(0) == "-debug")
+        debug = true
+        
+    stagelist = Stage.listStages(STAGEDIRECTORY)
+    interface = new mrtb.gui.GUI(800, 480)
   }
 
   // Updates are chained "events" that are fired by the animationTimer, and passed
@@ -45,9 +54,9 @@ object Manager {
   }
   
   def loadStage(id: String) = {
-    println(stagelist)
+    if (debug) println("stages found: " + stagelist)
     if (stagelist.contains(id)) {
-      currentStage = Stage.createStage(id, STAGEDIRECTORY)
+      currentStage = Stage.createStage(stagelist(id))
       gameState = "game_prewave"
       interface.enterGame
     } else {

@@ -1,0 +1,39 @@
+# Lines starting with a '#' are comments.
+# Lines started with an '!' denote a block of information.
+
+!Tower Battles 1.0
+
+!availabletowers
+wall1, arrowtower1, fasttower1, meleetower1, heavytower1, megatower1
+
+!info
+name=Test Map
+creator=mmKALLL
+description=Take on the level used for testing purposes, written about 19 hours before deadline!! *forced laugh*
+
+!wave
+# type only matters to the visual representation of the wave
+# possible types are: normal, slow, fast, mixed, flying, spawning, boss
+type=normal
+# enemy data; name,amount,delay,initialdelay
+greengoblin,12,25,20
+
+!wave
+type=slow
+slowblob,8,20,20
+
+!wave
+type=mixed
+greengoblin,8,30,5
+slowblob,8,30,20
+
+!wave
+type=normal
+greengoblin,25,14,15
+
+
+!highscores
+mmKALLL - 1337
+Esa - 500
+MRTB - 400
+MRTB - 300
