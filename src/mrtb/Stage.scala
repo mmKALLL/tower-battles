@@ -9,7 +9,7 @@ import scala.collection.mutable.Buffer
  * containing the relevant enemies and towers.
  */
 
-class Stage(waveAmount: Int) {
+class Stage(waves: Buffer[Wave]) {
   // Some variables are created to hold the relevant game-state information.
   // They are initialized here and overwritten by values specified in the stage file.
   var lives = 10
@@ -17,10 +17,23 @@ class Stage(waveAmount: Int) {
   var betweenWaves = true
   var gold = 200
   var score = 0
-  var timeLeft = 30
+  var phaseStart = System.currentTimeMillis
+  var phaseTime = 65
+  var timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis) / 1000
   val tiles = Array.ofDim[Tile](Manager.GRIDSIZE._1, Manager.GRIDSIZE._2)
-  val waves = Array.ofDim[Wave](waveAmount)
+  
+  def update = {
+    timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis) / 1000
+    if (timeLeft <= 0) {
+      
+    }
+  }
 }
+
+
+/**
+ * The singleton object Stage provides functions for reading and verifying stage data from external files.
+ */
 
 object Stage {
 
@@ -54,9 +67,9 @@ object Stage {
   def createStage(id: String, directory: String): Stage = {
     val stageFile = new File(directory + id)
     if (stageFile.getName() == "test.txt") {
-      new Stage(1)
+      new Stage(null)
     } else {
-      new Stage(1) //todo
+      new Stage(null) //todo
     }
     
   }

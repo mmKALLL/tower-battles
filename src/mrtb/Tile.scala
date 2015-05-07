@@ -1,5 +1,7 @@
 package mrtb
 
+import java.awt.Graphics2D
+
 /**
  * A class that represents a single tile on the game field.
  * Provides a basis for pathfinding.
@@ -17,5 +19,9 @@ class Tile (x: Int, y: Int, initialTower: Tower = null) {
   def setTower(tower: Tower) = placedTower = tower
   def destroyTower = placedTower = null
   
+  // A function for drawing the contents of this tile onto the screen.
+  def drawTile(g: Graphics2D) = {
+    //todo
+  }
   
 }
