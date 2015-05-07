@@ -3,37 +3,38 @@
 
 !Tower Battles 1.0
 
-!availabletowers
-wall1, arrowtower1, fasttower1, meleetower1, heavytower1, megatower1
-
 !info
 name=Test Map
 creator=mmKALLL
 description=Take on the level used for testing purposes, written about 19 hours before deadline!! *forced laugh*
 
-!wave
-# type only matters to the visual representation of the wave
+!availabletowers
+wall1, arrowtower1, fasttower1, meleetower1, heavytower1, megatower1
+
+# waves start with !wave, followed by type definition. However the type is purely for visual effects
 # possible types are: normal, slow, fast, mixed, flying, spawning, boss
+!wave
+buildphase=60
 type=normal
 # enemy data; name,amount,delay,initialdelay
 greengoblin,12,25,20
 
 !wave
+buildphase=40
 type=slow
 slowblob,8,20,20
 
 !wave
+buildphase=40
 type=mixed
 greengoblin,8,30,5
 slowblob,8,30,20
 
 !wave
+buildphase=40
 type=normal
 greengoblin,25,14,15
 
 
 !highscores
-mmKALLL - 1337
-Esa - 500
-MRTB - 400
-MRTB - 300
+Esa=500

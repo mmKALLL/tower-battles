@@ -40,7 +40,7 @@ class GUI (width: Int, height: Int) extends MainFrame {
   this.preferredSize = new Dimension(width + 6, height + 28) //padding to conform with borders on Win7
   this.contents = GameScreen
   this.resizable = false
-  this.title = "Tower Battles ver 0.2.05"
+  this.title = "Tower Battles ver 0.2.16"
 //  this.centerOnScreen  aaa
   enterMenu
   this.repaint()

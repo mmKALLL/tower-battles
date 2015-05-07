@@ -9,7 +9,7 @@ package mrtb
  * @special The special ability of this tower; 0 indicates no special.
  */
 
-class Tower (name: String, cost: Int, speed: Int, damage: Int, upgradesTo: Tower, special: Int = 0) {
+class Tower (name: String, cost: Int, speed: Int, damage: Int, range: Int, upgradesTo: Tower, special: String = "") {
   
   
   def getCost: Int = cost

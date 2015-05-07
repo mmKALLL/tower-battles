@@ -26,7 +26,7 @@ object Manager {
   // Variables to hold the game system's internal state.
   // Possible gamestates: init, menu, game_setup, game_wave, game_over
   var gameState = "init"
-  var stagelist: Map[String, File] = null
+  var stagelist: Map[String, (File, Array[String])] = null
   var currentStage: Stage = null
   var debug = false
   
@@ -53,10 +53,11 @@ object Manager {
     interface.update
   }
   
-  def loadStage(id: String) = {
+  // A method to load one of the stages from the stage list.
+  def loadStage(name: String) = {
     if (debug) println("stages found: " + stagelist)
-    if (stagelist.contains(id)) {
-      currentStage = Stage.createStage(stagelist(id))
+    if (stagelist.contains(name)) {
+      currentStage = Stage.createStage(stagelist(name)._1)
       gameState = "game_prewave"
       interface.enterGame
     } else {

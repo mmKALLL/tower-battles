@@ -12,10 +12,11 @@ import java.io.FileReader
  * containing the relevant enemies and towers.
  */
 
-class Stage(waves: Buffer[Wave]) {
+class Stage {
   // Some variables are created to hold the relevant game-state information.
   // They are initialized here and overwritten by values specified in the stage file.
   var name = "test"
+  var maker = "unknown"
   var lives = 10
   var currentWave = 1
   var betweenWaves = true
@@ -24,12 +25,18 @@ class Stage(waves: Buffer[Wave]) {
   var phaseStart = System.currentTimeMillis
   var phaseTime = 65
   var timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis) / 1000
+
+  var waves = Buffer[Wave]()
+  var availableTowers = Buffer[Tower]()
   val tiles = Array.ofDim[Tile](Manager.GRIDSIZE._1, Manager.GRIDSIZE._2)
+
+  def setWaves(in: Buffer[Wave]) = waves = in
+  def setTowers(in: Buffer[Tower]) = availableTowers = in
 
   def update = {
     timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis) / 1000
     if (timeLeft <= 0) {
-
+      //todo
     }
   }
 }
@@ -41,9 +48,9 @@ class Stage(waves: Buffer[Wave]) {
 
 object Stage {
 
-  // load the stage list when initialized
-  def listStages(directory: String): Map[String, File] = {
-    val result = Map[String, File]()
+  // load the stage list when initialized; return has info field mapped to descriptions, and that map mapped to the file.
+  def listStages(directory: String): Map[String, (File, Array[String])] = {
+    val result = Map[String, (File, Array[String])]()
 
     // The stage directory and its subdirectories are filtered for all text files.
     // Those text files are then checked for validity and loaded.
@@ -56,7 +63,8 @@ object Stage {
           .filter(a => a.getName().takeRight(4) == ".txt" && a.isFile)
       ) {
         if (isValidStage(x)) {
-          result += getStageName(x) -> x
+          val temp = getStageInfo(x)
+          result += temp(0) -> (x, temp.drop(1))
         } else if (Manager.debug) println(x.getName() + " is not a valid stage") // aaa
       }
     } else {
@@ -68,11 +76,44 @@ object Stage {
   }
 
   // A method to parse and load a single stage file, returning a Stage object.
-  // This should only be called from Manager using a list of verified stages.
+  // This should only be called from Manager using a verified stage after the user has selected it.
+  // The code is not very pretty nor elegant, but string parsing sometimes causes that to happen...
   def createStage(stageFile: File): Stage = {
-    //normal=235,235,235; slow=235,235,10; mixed=0,220,0
-    new Stage(null) //todo
+    val waves = Buffer[Wave]()
+    val towers = Buffer[Tower]()
+    val result = new Stage()
+    val r = new BufferedReader(new FileReader(stageFile))
+    var s = r.readLine()
+    var version = "0"
 
+    // While not at end of file, read a line and see whether it starts a block; if so, process the text.
+    while (s != null) {
+      if (s.trim.take(1) == "!") {
+        s.trim match {
+          case "!info" => 
+          case "!availabletowers" => {
+        	s = r.readLine()
+            while (s != "" && s.trim.take(1) != "!")
+              for (x <- s.split(",").map(_.trim)) {
+                
+              }
+          }
+          case "!wave" => {
+        	
+          }
+          case "!highscores" => {
+
+          }
+          case _ => if (version == 0) { if (s.contains(1.0)) version = "1.0" } else if (Manager.debug) println("unknown block detected; parser version 1.0")
+        }
+
+      }
+      s = r.readLine()
+    }
+    
+    if (version != "1.0")
+      throw new IllegalArgumentException("You tried to load a map file that is incompatible with the parser.")
+    result
   }
 
   // A method to check the validness of a stage file.
@@ -84,28 +125,32 @@ object Stage {
 
   }
 
-  // A method to parse the stage file for the name. Returns file name without extension if no name is specified.
-  def getStageName(in: File): String = {
-    var fr = new FileReader(in)
-    val r = new BufferedReader(fr)
+  // A method to parse the stage file for the info. Returns an array with the info fields;
+  // result(0) is stage name; result(1) is creator name; result(2) is description
+  def getStageInfo(in: File): Array[String] = {
+    val r = new BufferedReader(new FileReader(in))
     var s = r.readLine()
+    var result = Array[String](in.getName().dropRight(4), "unknown", "-")
+
     while (s != null) {
       if (s.trim.take(5) == "!info") {
+
         do {
           s = r.readLine
-          if (s.trim.take(4) == "name") {
-            if (Manager.debug)
-              println("checked stage name " + s.split('=')(1).trim() + " from file " + in)
-            return s.split('=')(1).trim()
+          s.split('=')(0).trim match {
+            case "name" => result(0) = s.split('=')(1).trim()
+            case "creator" => result(1) = s.split('=')(1).trim()
+            case "description" => result(2) = s.split('=')(1).trim()
+            case _ => if (Manager.debug) println("unknown variable found from info block in file " + in)
           }
         } while (!s.trim.startsWith("!") && s != null)
-
-        return in.getName().dropRight(4)
+        
+        // There is only one !info block so the result is returned here.
+        return result
       }
-
       s = r.readLine
     }
-    in.getName().dropRight(4)
+    result
   }
 
 }
