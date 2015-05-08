@@ -24,13 +24,13 @@ import java.awt.image.BufferedImage
  * while creating handlers for those custom elements would be the ideal situation, I have
  * decided to settle with sub-optimal, less elegant choices. This is because I don't feel like
  * the UI is complex enough that handling events in a simple way like this is "too" inelegant
- * considering the scope of the project. For version 1.1 or 1.2, I hope to create proper and automated
+ * considering the scope of the project. For version 1.2, I hope to create proper and automated
  * methods of creating various interface elements, in order to enable not only custom maps but
  * a modifiable UI as well.
  *
  * Pattern matching is used a lot. Crude benchmarking showed that on my subpar hardware the drawing was done
- * within 1 ms without enemies on screen, and in 2-3 ms with them. Since this seems to be by far the most
- * resource-intensive part of the software, I'm delighted at the results. Running the game very smoothly even
+ * within 1 ms without objects on the field, and in 2-3 ms with them. Since this seems to be by far the most
+ * resource-intensive part of the software, I'm delighted with the results. Running the game very smoothly even
  * on a limited system such as the OpenPandora should be well within realistic limits.
  */
 
@@ -132,8 +132,8 @@ object GameScreen extends Panel {
     }
     
     frames += 1
-    if (frames % 300 == 0 && GUI.manager.debug)
-      println("Rendered a total of " + frames + " frames with an average of " + renderTimeTotal / frames / 1000 + "µs per frame at 30 FPS.")
+    if (frames % (GUI.manager.FPS * 10) == 0 && GUI.manager.debug)
+      println("Rendered a total of " + frames + " frames with an average of " + renderTimeTotal / frames / 1000 + "µs per frame at " + GUI.manager.FPS + " FPS.")
     renderTimeTotal += System.nanoTime() - start
   }
 

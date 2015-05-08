@@ -6,12 +6,12 @@
 !info
 name=Test Map
 creator=mmKALLL
-description=Take on the level used for testing purposes, written about 19 hours before deadline!! *forced laugh*
+description=Take on the level used for testing purposes, written about 19 hours before deadline!! *forced laugh*\n\nContains 4 waves.
 
 !availabletowers
-wall1, arrowtower1, fasttower1, meleetower1, heavytower1, megatower1
+wall1, arrowtower1, thumper1, sniper1
 
-# waves start with !wave, followed by type definition. However the type is purely for visual effects
+# Waves start with !wave, followed by type definition. However the type is purely for visual effects.
 # possible types are: normal, slow, fast, mixed, flying, spawning, boss
 !wave
 buildphase=60

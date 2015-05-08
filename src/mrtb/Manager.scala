@@ -22,16 +22,20 @@ object Manager {
   final val GRIDSIZE = (18, 11)
   final val STAGEDIRECTORY = ".\\stages\\"
   final val FPS = 60
+  final val VERSION = "1.0"
 
   // Variables to hold the game system's internal state.
   // Possible gamestates: init, menu, game_setup, game_wave, game_over
   var gameState = "init"
+  // stagelist maps each stage id to its file and an array containing its info (map name, creator name, description)
   var stagelist: Map[String, (File, Array[String])] = null
+  var towerlist: Map[String, Tower] = null
   var currentStage: Stage = null
+  var stageOK: Boolean = true
   var debug = false
   
   // A timer to keep track with the real-time events ingame.
-  val animationTimer = Ticker(33, true) { if(gameState.take(4) == "game") this.update }
+  val animationTimer = Ticker(1000/FPS, true) { if(gameState.take(4) == "game") this.update }
 
   // The GUI is designed to be 800x480; don't change these values!
   var interface: mrtb.gui.GUI = null
@@ -42,6 +46,7 @@ object Manager {
       if (args(0) == "-debug")
         debug = true
         
+    towerlist = Tower.loadTowers
     stagelist = Stage.listStages(STAGEDIRECTORY)
     interface = new mrtb.gui.GUI(800, 480)
   }
@@ -53,11 +58,13 @@ object Manager {
     interface.update
   }
   
-  // A method to load one of the stages from the stage list.
+  // A method to load one of the stages from the stage list. Called by UI.
+  // Individual stages' names need to be unique.
   def loadStage(name: String) = {
-    if (debug) println("stages found: " + stagelist)
+    stageOK = true
+    if (debug) println("stages found: " + stagelist + "\ntowers found: " + towerlist)
     if (stagelist.contains(name)) {
-      currentStage = Stage.createStage(stagelist(name)._1)
+      currentStage = Stage.createStage(name, stagelist(name)._1)
       gameState = "game_prewave"
       interface.enterGame
     } else {

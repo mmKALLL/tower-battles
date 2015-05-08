@@ -48,7 +48,7 @@ class Stage {
 
 object Stage {
 
-  // load the stage list when initialized; return has info field mapped to descriptions, and that map mapped to the file.
+  // load the stage list when initialized; return has name mapped to a tuple containing the file reference and info fields.
   def listStages(directory: String): Map[String, (File, Array[String])] = {
     val result = Map[String, (File, Array[String])]()
 
@@ -77,8 +77,8 @@ object Stage {
 
   // A method to parse and load a single stage file, returning a Stage object.
   // This should only be called from Manager using a verified stage after the user has selected it.
-  // The code is not very pretty nor elegant, but string parsing sometimes causes that to happen...
-  def createStage(stageFile: File): Stage = {
+  // The code is not very pretty nor elegant, but file parsing sometimes causes that to happen...
+  def createStage(name: String, stageFile: File): Stage = {
     val waves = Buffer[Wave]()
     val towers = Buffer[Tower]()
     val result = new Stage()
@@ -90,29 +90,39 @@ object Stage {
     while (s != null) {
       if (s.trim.take(1) == "!") {
         s.trim match {
-          case "!info" => 
+          case "!info" => s = r.readLine()
           case "!availabletowers" => {
-        	s = r.readLine()
-            while (s != "" && s.trim.take(1) != "!")
+            s = r.readLine()
+            while (s != "" && s.trim.take(1) != "!") {
               for (x <- s.split(",").map(_.trim)) {
-                
+                val tower = Tower.loadTower(x)
+                if (tower != null) towers += tower
               }
+              s = r.readLine()
+            }
           }
           case "!wave" => {
-        	
+            s = r.readLine()
           }
           case "!highscores" => {
-
+            s = r.readLine()
           }
-          case _ => if (version == 0) { if (s.contains(1.0)) version = "1.0" } else if (Manager.debug) println("unknown block detected; parser version 1.0")
+          case _ => {
+            if (version == "0") {
+              if (s.contains("1.0")) version = "1.0"
+            } else if (Manager.debug) println("unknown block detected; parser version " + Manager.VERSION + ".")
+            s = r.readLine()
+          }
         }
 
-      }
-      s = r.readLine()
+      } else s = r.readLine()
     }
-    
+
     if (version != "1.0")
-      throw new IllegalArgumentException("You tried to load a map file that is incompatible with the parser.")
+      throw new IllegalArgumentException("You tried to load a map file that is incompatible with the parser, version " + Manager.VERSION + ".")
+    
+    // If parsing is done, proceed to modify the result before returning it.
+    //todo
     result
   }
 
@@ -120,8 +130,11 @@ object Stage {
   def isValidStage(in: File): Boolean = {
     //todo
     if (Manager.debug)
-      println(in.getName + " recognized as a valid stage")
-    true
+      if (Manager.stageOK)
+        println(in.getName + " assumed to be a valid stage")
+      else
+        println(in.getName + " is not a valid stage")
+    Manager.stageOK
 
   }
 
@@ -137,14 +150,15 @@ object Stage {
 
         do {
           s = r.readLine
-          s.split('=')(0).trim match {
-            case "name" => result(0) = s.split('=')(1).trim()
-            case "creator" => result(1) = s.split('=')(1).trim()
-            case "description" => result(2) = s.split('=')(1).trim()
-            case _ => if (Manager.debug) println("unknown variable found from info block in file " + in)
-          }
+          if (s.split('=').length == 2)
+            s.split('=')(0).trim match {
+              case "name" => result(0) = s.split('=')(1).trim()
+              case "creator" => result(1) = s.split('=')(1).trim()
+              case "description" => result(2) = s.split('=')(1).trim()
+              case _ => if (Manager.debug) println("unknown variable found from info block in file " + in)
+            }
         } while (!s.trim.startsWith("!") && s != null)
-        
+
         // There is only one !info block so the result is returned here.
         return result
       }

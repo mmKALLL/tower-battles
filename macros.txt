@@ -1,6 +1,7 @@
 # A setting file used for various macros. You are free to write your own, but
 # should follow the syntax exactly; see the examples.
 
+# \\\\\\\\\\ MACROS ARE UNIMPLEMENTED AS OF VERSION 1.0 \\\\\\\\\\
 
 # A macro defining a "default" wave consisting of two goblin spawns.
 # Usage: writing {defaultwave} in a stage file essentially replaces the text

@@ -2,9 +2,9 @@
 # A file that defines various enemies.
 # The 1.0 parser expects the variables to always be written in the same order.
 
+#greengoblin.png drawn by Steve Riddett (www.themetalbox.com), licenced under Creative Commons 2.0 and used with permission
 !defineunit
 id=greengoblin
-directions=LR_M
 image=greengoblin.png
 hp=70
 speed=6
@@ -14,7 +14,6 @@ scoregain=10
 !defineunit
 id=slowblob
 image=slowblob.png
-directions=LRUD_R
 hp=140
 speed=2
 goldgain=15

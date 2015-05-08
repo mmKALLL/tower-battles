@@ -1,9 +1,13 @@
 package mrtb
 
 import java.awt.Color
+import scala.collection.mutable.Buffer
 
 class Wave(wavetype: String, position: Int) {
 
+  // An ordered list that tracks the time left to spawn a specific enemy in milliseconds.
+  var enemyList = Buffer[(Int, Enemy)]()
+  
   val description: (String, Color) = wavetype.trim().toLowerCase() match {
     case "normal" => (position + ": Normal", new Color(235, 235, 235))
     case "slow" => (position + ": Slow", new Color(255, 130, 80))
@@ -17,4 +21,5 @@ class Wave(wavetype: String, position: Int) {
       (position + ": Normal", new Color(235, 235, 235))
     }
   }
+  
 }
