@@ -16,6 +16,10 @@ class StandardEnemy(id: String) extends Enemy(id) {
  */
 object Enemy {
   
-  def loadEnemy(id: String) = ???
+  def loadEnemy(id: String): (Boolean, Enemy) = ???
+  
+  def loadEnemyList = ???
+  
+  def apply(id: String): Enemy = ???
   
 }

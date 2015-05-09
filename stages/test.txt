@@ -35,6 +35,6 @@ buildphase=40
 type=normal
 greengoblin,25,14,15
 
-
+# High scores are not implemented yet.
 !highscores
 Esa=500

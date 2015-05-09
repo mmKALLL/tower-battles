@@ -90,23 +90,56 @@ object Stage {
     while (s != null) {
       if (s.trim.take(1) == "!") {
         s.trim match {
+
           case "!info" => s = r.readLine()
+
           case "!availabletowers" => {
             s = r.readLine()
-            while (s != "" && s.trim.take(1) != "!") {
-              for (x <- s.split(",").map(_.trim)) {
-                val tower = Tower.loadTower(x)
-                if (tower != null) towers += tower
+            while (s != null && s.trim.take(1) != "!") {
+              if (s.trim.head != '#') {
+                for (x <- s.split(",").map(_.trim)) {
+                  val tower = Tower.loadTower(x)
+                  if (tower != null) towers += tower
+                }
               }
               s = r.readLine()
             }
           }
+
           case "!wave" => {
             s = r.readLine()
+            while (s != null && s.trim.take(1) != "!") {
+              val res = new Wave(waves.size + 1)
+              if (s.trim.take(1) != "#" && !s.isEmpty()) {
+                if (s.split("=").length == 2) {
+                  s.split("=")(0) match {
+                    case "buildphase" => try {
+                      res.setBuildPhase(s.split("=")(1).trim.toInt)
+                    } catch { case _: Throwable => if (Manager.debug) println("buildphase in wave #" + waves.length + 1 + " is not a number, ignoring") }
+                    case "type" => res.setType(s.split("=")(1).trim)
+                    case _ => if (Manager.debug) println("unknown value defined in wave #" + waves.length + 1 + ", ignoring")
+                  }
+                } else {
+                  val temp = s.split(',').map(_.trim)
+                  if (temp.length == 4) {
+                    val enemy = Enemy.loadEnemy(temp(0))
+                    if (enemy._1)
+                      try {
+                        for (x <- 1 to temp(1).toInt)
+                          res.addEnemy(enemy._2, temp(3).toInt + temp(2).toInt * x)
+                      } catch { case _: Throwable => if (Manager.debug) println("enemy define in wave #" + waves.length + 1 + "is invalid") }
+                  } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
+                }
+              }
+              s = r.readLine()
+            }
           }
+          
           case "!highscores" => {
+            //            High scores are not yet implemented.
             s = r.readLine()
           }
+          
           case _ => {
             if (version == "0") {
               if (s.contains("1.0")) version = "1.0"
@@ -120,9 +153,11 @@ object Stage {
 
     if (version != "1.0")
       throw new IllegalArgumentException("You tried to load a map file that is incompatible with the parser, version " + Manager.VERSION + ".")
-    
+
     // If parsing is done, proceed to modify the result before returning it.
     //todo
+    // sort waves
+    // set waves
     result
   }
 

@@ -32,12 +32,11 @@ class Tower(name: String, image: BufferedImage, cost: Int, speed: Int, damage: I
  */
 
 object Tower {
-  var towers = Map[String, Tower]()
 
   // Loads a single tower with the specified id; returns null (!!) if not found.
   def loadTower(id: String): Tower = {
-    if (towers.contains(id))
-      towers(id)
+    if (Manager.towerlist.contains(id))
+      Manager.towerlist(id)
     else {
       if (Manager.debug) println("tower with id " + id + " was not found")
       Manager.stageOK = false
@@ -46,6 +45,7 @@ object Tower {
   }
 
   def loadTowers: Map[String, Tower] = {
+    var towers = Map[String, Tower]()
     val r = new BufferedReader(new FileReader(new File("towers.txt")))
     var s = r.readLine()
     var version = "0"
@@ -87,7 +87,7 @@ object Tower {
       } // If no new block was found, read the next line.
       else s = r.readLine()
     }
-    
+
     towers
   }
 
