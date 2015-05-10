@@ -19,8 +19,8 @@ class Stage {
   var maker = "unknown"
   var lives = 10
   var currentWave = 1
-  var betweenWaves = true
-  var gold = 200
+  var betweenWaves = true   // A variable for future use.
+  var gold = 0
   var score = 0
   var phaseStart = System.currentTimeMillis
   var phaseTime = 65
@@ -32,6 +32,7 @@ class Stage {
 
   def setWaves(in: Buffer[Wave]) = waves = in
   def setTowers(in: Buffer[Tower]) = availableTowers = in
+  def getCurrentWave: Wave = waves(currentWave - 1)
 
   def update = {
     timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis) / 1000
@@ -44,7 +45,10 @@ class Stage {
 /**
  * The singleton object Stage provides functions for reading and verifying stage data from external files.
  * The main focus for version 1.1 would be to improve the leniency and tolerance with the file parsing.
+ * 
+ * The NoWavesException is thrown when the stage file contains no compatible enemy wave definitions.
  */
+class NoWavesDefinedException(message: String = "") extends Exception(message)
 
 object Stage {
 
@@ -96,7 +100,7 @@ object Stage {
           case "!availabletowers" => {
             s = r.readLine()
             while (s != null && s.trim.take(1) != "!") {
-              if (s.trim.head != '#') {
+              if (s.trim.take(1) != "#" && !s.isEmpty) {
                 for (x <- s.split(",").map(_.trim)) {
                   val tower = Tower.loadTower(x)
                   if (tower != null) towers += tower
@@ -108,8 +112,8 @@ object Stage {
 
           case "!wave" => {
             s = r.readLine()
+            val res = new Wave(waves.size + 1)
             while (s != null && s.trim.take(1) != "!") {
-              val res = new Wave(waves.size + 1)
               if (s.trim.take(1) != "#" && !s.isEmpty()) {
                 if (s.split("=").length == 2) {
                   s.split("=")(0) match {
@@ -123,23 +127,26 @@ object Stage {
                   val temp = s.split(',').map(_.trim)
                   if (temp.length == 4) {
                     val enemy = Enemy.loadEnemy(temp(0))
-                    if (enemy._1)
+                    if (enemy != null) {
                       try {
                         for (x <- 1 to temp(1).toInt)
-                          res.addEnemy(enemy._2, temp(3).toInt + temp(2).toInt * x)
+                          res.addEnemy(enemy, temp(3).toInt + temp(2).toInt * x)
                       } catch { case _: Throwable => if (Manager.debug) println("enemy define in wave #" + waves.length + 1 + "is invalid") }
+
+                    } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
                   } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
                 }
               }
               s = r.readLine()
             }
+            waves += res
           }
-          
+
           case "!highscores" => {
             //            High scores are not yet implemented.
             s = r.readLine()
           }
-          
+
           case _ => {
             if (version == "0") {
               if (s.contains("1.0")) version = "1.0"
@@ -151,13 +158,19 @@ object Stage {
       } else s = r.readLine()
     }
 
-    if (version != "1.0")
+    if (version != "1.0") 
       throw new IllegalArgumentException("You tried to load a map file that is incompatible with the parser, version " + Manager.VERSION + ".")
 
+    if (waves.length == 0)
+      throw new NoWavesDefinedException("You tried to load a map file with no waves defined.")
+      
     // If parsing is done, proceed to modify the result before returning it.
     //todo
-    // sort waves
-    // set waves
+    
+    println(waves)
+    waves.foreach(_.sortEnemies)
+    result.setWaves(waves)
+    result.gold = waves(0).goldbonus
     result
   }
 

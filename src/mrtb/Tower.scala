@@ -38,12 +38,13 @@ object Tower {
     if (Manager.towerlist.contains(id))
       Manager.towerlist(id)
     else {
-      if (Manager.debug) println("tower with id " + id + " was not found")
+      if (Manager.debug) println("tower with id \"" + id + "\" was not found")
       Manager.stageOK = false
       null
     }
   }
 
+  // Parses towers.txt for all the tower definitions available.
   def loadTowers: Map[String, Tower] = {
     var towers = Map[String, Tower]()
     val r = new BufferedReader(new FileReader(new File("towers.txt")))
@@ -58,8 +59,8 @@ object Tower {
             var temp = Map[String, String]()
             s = r.readLine()
             while (s != null && s.trim().take(1) != "!") {
-              if (s.split("=").length == 2)
-                temp += s.split("=")(0).trim -> s.split("=")(1).trim
+              if (s.split("=").length == 2 && s.trim().take(1) != "#")
+                temp += s.split("=")(0).trim.toLowerCase() -> s.split("=")(1).trim
               s = r.readLine()
             }
 

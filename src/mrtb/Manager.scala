@@ -29,7 +29,9 @@ object Manager {
   var gameState = "init"
   // stagelist maps each stage id to its file and an array containing its info (map name, creator name, description)
   var stagelist: Map[String, (File, Array[String])] = null
+  // towerlist and enemylist map id's to their respective objects
   var towerlist: Map[String, Tower] = null
+  var enemylist: Map[String, Enemy] = null
   var currentStage: Stage = null
   var stageOK: Boolean = true
   var debug = false
@@ -47,6 +49,7 @@ object Manager {
         debug = true
         
     towerlist = Tower.loadTowers
+    enemylist = Enemy.loadEnemies
     stagelist = Stage.listStages(STAGEDIRECTORY)
     interface = new mrtb.gui.GUI(800, 480)
   }
@@ -56,6 +59,7 @@ object Manager {
   def update = {
     currentStage.update
     interface.update
+    currentStage.getCurrentWave.update
   }
   
   // A method to load one of the stages from the stage list. Called by UI.

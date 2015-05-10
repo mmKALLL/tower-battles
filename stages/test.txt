@@ -14,6 +14,7 @@ wall1, arrowtower1, thumper1, sniper1
 # Waves start with !wave, followed by type definition. However the type is purely for visual effects.
 # possible types are: normal, slow, fast, mixed, flying, spawning, boss
 !wave
+goldbonus=200
 buildphase=60
 type=normal
 # enemy data; name,amount,delay,initialdelay

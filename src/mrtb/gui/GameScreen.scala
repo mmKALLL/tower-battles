@@ -13,6 +13,8 @@ import java.awt.FontMetrics
 import javax.swing.Timer
 import java.awt.event.ActionListener
 import java.awt.image.BufferedImage
+import scala.swing.Dialog
+import mrtb._
 
 /**
  * A Panel that uses Graphics2D to paint the wanted images etc.
@@ -161,7 +163,13 @@ object GameScreen extends Panel {
         case "menu" => {
           if (GUI.manager.debug) println("reacted to MouseReleased in-menu; " + b)
           if (b.point.x < 95 && b.point.y < 80) {
-            GUI.manager.loadStage("Test Map")
+            try {
+              GUI.manager.loadStage("Test Map")
+            } catch {
+              case e: IllegalArgumentException => Dialog.showMessage(this, "You tried to open a stage that is incompatible with the game! Parser is version 1.0.", "Error!")
+              case e: NoWavesDefinedException => Dialog.showMessage(this, "You tried to open a stage that contains no compatible waves! Parser is version 1.0.", "Error!")
+              case _ => Dialog.showMessage(this, "You tried to open a stage, but there was an unknown error! Parser is version 1.0.", "Error!")
+            }
             if (GUI.manager.debug) println("opening stage \"" + GUI.manager.currentStage.name + "\", proceeding to game...")
           }
         }

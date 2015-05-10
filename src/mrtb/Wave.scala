@@ -11,8 +11,10 @@ class Wave(position: Int) {
   var text = descriptionS
   var color = descriptionC
   var buildphase = 10
+  var goldbonus = 0
   
   def setBuildPhase(in: Int) = buildphase = in
+  def setGoldBonus(in: Int) = goldbonus = in
   def setType(in: String) = {
     wavetype = in
     text = descriptionS
@@ -20,6 +22,13 @@ class Wave(position: Int) {
   }
   
   def addEnemy(in: Enemy, time: Int) = enemyList += Tuple2(time, in)
+  def sortEnemies = enemyList = enemyList.sortBy(_._1)
+  
+  def update = {
+    enemyList.foreach(_._2.update)
+  }
+  
+  def getFirstEnemy: Enemy = enemyList.head._2
 
   def descriptionS: String = wavetype match {
     case "normal" => position + ": Normal"

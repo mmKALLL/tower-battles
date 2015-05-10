@@ -7,6 +7,7 @@
 id=greengoblin
 image=greengoblin.png
 hp=70
+damage=1
 speed=6
 goldgain=10
 scoregain=10
@@ -15,6 +16,7 @@ scoregain=10
 id=slowblob
 image=slowblob.png
 hp=140
+damage=1
 speed=2
 goldgain=15
 scoregain=10
