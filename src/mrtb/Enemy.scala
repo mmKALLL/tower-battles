@@ -24,29 +24,25 @@ class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: In
   var nextTile: Int = 1
 
   var x: Int = Manager.TILESIZE / 2
-  var y: Int = Manager.TILESIZE * (Manager.GRIDSIZE._2 / 2 + 1) + Manager.TILESIZE / 2
-
-  // A method to handle an enemy death
-  def destroy = {
-    if (HP <= 0) {
-      Manager.currentStage.gold += goldgain
-      Manager.currentStage.score += scoregain
-    }
-  }
+  var y: Int = Manager.TILESIZE * (Manager.GRIDSIZE._2 / 2) + Manager.TILESIZE / 2
 
   // Handles movement on a pixel scale
   def update = {
-    var movement = Math.min(32, speed * (1 - (slow / 100)))
+    if (slow > 0)
+      slow -= 1
+    if (HP <= 0)
+      Manager.destroy(this)
+    var movement = Math.min(32.0, Math.max(1.43, speed.toDouble * (1 - (slow / 100)) / 10))
     while (movement > 0) {
       if (currentTile == Enemy.shortestPath.length - 1) {
-        Manager.loseLife(this)
-        this.destroy
+        movement = 0
+        Manager.destroy(this)
       } else {
 
         val a = Enemy.shortestPath(currentTile)
         val b = Enemy.shortestPath(nextTile)
 
-        // Check the direction and update position accordingly.
+        // Check the direction and update position accordingly. The enemies move from the center of a tile edge to the next.
         (b.getX - a.getX, b.getY - a.getY) match {
           case (1, 0) => {
             val distance = Math.sqrt(Math.pow(a.rightEdge._1 - x, 2) + Math.pow(a.rightEdge._2 - y, 2))
@@ -152,7 +148,7 @@ object Enemy {
     tiles.flatten.foreach(a => weights += a -> (99999.9, getHeuristic(a), null))
 
     // Open is a priority queue consisting of the tiles currently under consideration, ordered by best distance + heuristic.
-    var open = PriorityQueue[Tile](tiles(0)(Manager.GRIDSIZE._2 / 2 + 1))(Ordering[Double].on(a => - weights(a)._1 - weights(a)._2))
+    var open = PriorityQueue[Tile](tiles(0)(5))(Ordering[Double].on(a => - weights(a)._1 - weights(a)._2))
     var closed = Buffer[Tile]() // lookup unordered is O(n) (!!!) aaa
 
     var current = open.dequeue
@@ -205,7 +201,7 @@ object Enemy {
     // After finding the path, process it
     current = goal
     var result = Buffer[Tile](goal)
-    while (current != tiles(0)(Manager.GRIDSIZE._2 / 2 + 1)) {
+    while (current != tiles(0)(5)) {
       result += weights(current)._3
       current = weights(current)._3
     }

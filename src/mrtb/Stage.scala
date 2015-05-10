@@ -27,30 +27,61 @@ class Stage {
 
   var waves = Buffer[Wave]()
   var availableTowers = Buffer[Tower]()
+  var towers = Buffer[Tower]()
   val tiles = Array.tabulate[Tile](Manager.GRIDSIZE._1, Manager.GRIDSIZE._2)((a, b) => new Tile(a + 1, b + 1))
 
   def setWaves(in: Buffer[Wave]) = waves = in
   def setTowers(in: Buffer[Tower]) = availableTowers = in
   def getCurrentWave: Wave = waves.head
-  def placeTower(id: String, x: Int, y: Int) = tiles(x - 1)(y - 1).setTower(Tower.loadTower(id))
-  
+  def placeTower(id: String, x: Int, y: Int) = {
+    tiles(x - 1)(y - 1).setTower(Tower.loadTower(id))
+    tiles(x - 1)(y - 1).getTower.x = tiles(x - 1)(y - 1).center._1
+    tiles(x - 1)(y - 1).getTower.y = tiles(x - 1)(y - 1).center._2
+    towers += tiles(x - 1)(y - 1).getTower
+  }
+
   def startWave = {
     score += 3 * timeLeft
     Enemy.findShortestPath(tiles)
+    phaseStart = System.currentTimeMillis
+    phaseTime = waves.head.enemyList.last._1 / Manager.FPS
     Manager.gameState = "game_wave"
   }
-  
+
   def nextWave = {
-    Manager.gameState = "game_setup"
-      // todo
+    if (waves.length > 1) {
+      waves.drop(1)
+      phaseStart = System.currentTimeMillis
+      phaseTime = waves.head.buildphase
+      gold += waves.head.goldbonus
+      lives += waves.head.lifebonus
+      Manager.gameState = "game_setup"
+    } else {
+      Manager.gameState = "beat"
+      if (Manager.debug) println("You beat the game!")
+    }
+    // todo
+  }
+
+  def loseLife(damage: Int) = {
+    lives -= 1
+    if (lives <= 0) {
+      Manager.gameState = "over"
+    }
   }
 
   def update = {
-    timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
     if (timeLeft <= 0 && Manager.gameState == "game_setup") {
       startWave
     } else if (Manager.gameState == "game_wave") {
-      waves.head.update
+      timeLeft = 0
+      if (!waves.head.enemyList.isEmpty) {
+        waves.head.update
+        towers.foreach(_.update)
+      }
+    } else {
+      timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
+      if (waves.head.enemyList.isEmpty && Manager.gameState == "game_wave") nextWave
     }
   }
 }
@@ -82,10 +113,10 @@ object Stage {
         if (isValidStage(x)) {
           val temp = getStageInfo(x)
           result += temp(0) -> (x, temp.drop(1))
-        } else if (Manager.debug) println(x.getName() + " is not a valid stage") // aaa
+        } else if (Manager.debug) println(x.getName() + " is not a valid stage")
       }
     } else {
-      if (Manager.debug) println("The \'stages\' directory doesn't exist!!!") // aaa
+      if (Manager.debug) println("The \'stages\' directory doesn't exist!!!")
       throw new Exception("The stage directory doesn't exist. Exiting...")
     }
 
@@ -144,14 +175,16 @@ object Stage {
                     val enemy = Enemy.loadEnemy(temp(0))
                     if (enemy != null) {
                       try {
-                        for (x <- 1 to temp(1).toInt)
+                        for (x <- 1 to temp(1).toInt) {
                           res.addEnemy(enemy, temp(3).toInt + temp(2).toInt * x)
+                        }
                       } catch { case _: Throwable => if (Manager.debug) println("enemy define in wave #" + waves.length + 1 + "is invalid") }
 
                     } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
                   } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
                 }
               }
+              println(res.enemyList)
               s = r.readLine()
             }
             waves += res
@@ -187,9 +220,6 @@ object Stage {
     result.gold = waves(0).goldbonus
     result.lives = waves(0).lifebonus
     result.phaseTime = waves(0).buildphase
-    result.placeTower("arrowtower1", 5, 5)
-    result.placeTower("arrowtower1", 5, 6)
-    result.placeTower("arrowtower1", 6, 7)
     result
   }
 

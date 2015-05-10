@@ -1,8 +1,9 @@
 package mrtb.gui
 
 import scala.swing.SimpleSwingApplication
-import scala.swing.{MainFrame, FlowPanel, Button}
+import scala.swing.{ MainFrame, FlowPanel, Button }
 import java.awt.Dimension
+import scala.swing.Dialog
 
 /**
  * The GUI class. Initially I attempted to set it up using Scage, but due to an
@@ -13,7 +14,7 @@ import java.awt.Dimension
  * to cut my losses short and get on with Scala Swing, abandoning most of the visual stylishness I had
  * planned to create. Perhaps it was naïve to expect being able to set up a gfx library within
  * one or two hours with no prior experience.
- * 
+ *
  * As for the implementation here, the game's GUI essentially consists of two screens - the main menu
  * and the actual gameplay. The panel that represents them is the singleton object called GameScreen, and
  * the various UI elements are painted on the panel. Due to time restrictions, there might be some discrepancy
@@ -22,7 +23,7 @@ import java.awt.Dimension
  * a lot of downsides, but feel the most comfortable implementing such an interface, and it's definitely
  * the most powerful option available, if a bit resource-intensive. Relying on Graphics2D might be pushing
  * it performance-wise, but at this point I feel like it's justifiable. It is also fairly smart with redraws.
- * 
+ *
  * If there was more time, I'd create an abstract class/trait that would make implementing custom UIs easier.
  * Right now, extensibility by modifying or adding code is not one of my top priorities, although
  * I certainly intend to keep the system flexible to changes and resilient to errors.
@@ -36,27 +37,24 @@ abstract class SwingInterface extends MainFrame {
   def update = this.repaint()
 }
 
-class GUI (width: Int, height: Int) extends MainFrame {
-  
+class GUI(width: Int, height: Int) extends MainFrame {
+
   // Initialization
   this.preferredSize = new Dimension(width + 6, height + 28) //padding to conform the borders on Win7
   this.contents = GameScreen
   this.resizable = false
-  this.title = "Tower Battles ver 0.4.07"
-//this.centerOnScreen  aaa
-  enterMenu
+  this.title = "Tower Battles ver 0.5.18"
+  this.centerOnScreen
   this.repaint()
   this.visible = true
-  
+
   // Various functions
   def top: MainFrame = this
-  def enterMenu = GameScreen.enterMenu
-  def enterGame = GameScreen.enterGame
   def update = this.repaint()
-  
+
   // Event handling
   this.listenTo(GameScreen)
-  
+
 }
 
 object GUI {

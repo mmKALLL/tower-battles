@@ -38,11 +38,8 @@ import mrtb._
 
 object GameScreen extends Panel {
 
-  // Internal values.
-  private var state = "menu"
-  def enterMenu = state = "menu"
-  def enterGame = state = "game"
-
+  // Some private variables for convenience.
+  private var dialogOpen = false
   private val tileSize = GUI.manager.TILESIZE
   private val gridWidth = GUI.manager.GRIDSIZE._1
   private val gridHeight = GUI.manager.GRIDSIZE._2
@@ -59,25 +56,41 @@ object GameScreen extends Panel {
   preferredSize = new Dimension(800, 480)
   repaint()
   this.visible = true
-  
 
   override def paintComponent(g: Graphics2D) = {
     val start = System.nanoTime()
     clear(g)
 
-    state match {
+    GUI.manager.gameState.take(4) match {
       case "menu" => {
-        // White areas are drawn first, then other backgrounds, then text, then outlines.
-        g.setColor(new Color(255, 255, 255))
-        g.fillRect(15, 30, 80, 50)
-        g.setColor(new Color(0, 0, 0))
-        g.drawRect(15, 30, 80, 50)
-        g.drawString("click here", 30, 50)
-        g.drawString("for game", 35, 65)
+        // Backgrounds are drawn first, then outlines, then text.
+        g.setFont(new Font("SansSerif", Font.PLAIN, 14))
+        for (x <- GUI.manager.stagelist.keys.zipWithIndex) {
+          g.setColor(new Color(255, 255, 255))
+          g.fillRect(200, 10 + 40 * x._2, 200, 30)
+          g.setColor(new Color(0, 0, 0))
+          g.drawRect(200, 10 + 40 * x._2, 200, 30)
+          g.drawString(x._1, 215, 28 + 40 * x._2)
+        }
+      }
+
+      case "over" => {
+        Manager.gameState = "end"
+        g.setColor(new Color(230, 255, 255))
+        g.fillRect(0, 0, size.width, size.height)
+        // For some reason, this doesn't work properly. \\\\\\TODO\\\\\\ aaa
+        Dialog.showMessage(this, "You lost!", "Game over! Score: " + GUI.manager.currentStage.score)
+        System.exit(0)
+      }
+
+      case "end" =>
+
+      case "beat" => {
+        //todo
       }
 
       case "game" => {
-        
+
         // First, the various background areas of major UI features are colored light grey.
         g.setColor(new Color(245, 245, 245))
         g.fillRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight) // Game area
@@ -127,14 +140,16 @@ object GameScreen extends Panel {
 
         // The game field is drawn
         //todo
+
         Manager.currentStage.getCurrentWave.enemyList.foreach(
-            a => if (a._1 <= 0) g.drawImage(a._2.image, null, a._2.x + Manager.TILESIZE - a._2.image.getWidth() / 2, a._2.y + Manager.TILESIZE - a._2.image.getHeight() / 2))
-        Manager.currentStage.tiles.flatten.foreach(a => if (!a.isEmpty) g.drawImage(a.getTower.image, null, a.leftEdge._1 + Manager.TILESIZE, a.upperEdge._2 + Manager.TILESIZE))
+          a => if (a._1 <= 0) g.drawImage(a._2.image, null, a._2.x + Manager.TILESIZE - a._2.image.getWidth() / 2, a._2.y + Manager.TILESIZE - a._2.image.getHeight() / 2))
+        Manager.currentStage.tiles.flatten.foreach(
+          a => if (!a.isEmpty) g.drawImage(a.getTower.image, null, a.leftEdge._1 + Manager.TILESIZE + 1, a.upperEdge._2 + Manager.TILESIZE + 1))
       }
 
       case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")
     }
-    
+
     frames += 1
     if (frames % (GUI.manager.FPS * 10) == 0 && GUI.manager.debug)
       println("Rendered a total of " + frames + " frames with an average of " + renderTimeTotal / frames / 1000 + "µs per frame at " + GUI.manager.FPS + " FPS.")
@@ -161,15 +176,17 @@ object GameScreen extends Panel {
 
   this.reactions += {
     case b: MouseReleased => {
-      state match {
+      GUI.manager.gameState.take(4) match {
         case "menu" => {
           if (GUI.manager.debug) println("reacted to MouseReleased in-menu; " + b)
-          if (b.point.x < 95 && b.point.y < 80) {
+          if (b.point.x > 200 && b.point.x < 400 && b.point.y < 40 * GUI.manager.stagelist.size && b.point.y > 10) {
             try {
-              GUI.manager.loadStage("Test Map")
+              GUI.manager.loadStage(GUI.manager.stagelist.keys.take((b.point.y + 40) / 40).last)
             } catch {
-              case e: IllegalArgumentException => Dialog.showMessage(this, "You tried to open a stage that is incompatible with the game! Parser is version 1.0.", "Error!"); e.printStackTrace()
-              case e: NoWavesDefinedException => Dialog.showMessage(this, "You tried to open a stage that contains no compatible waves! Parser is version 1.0.", "Error!"); e.printStackTrace()
+              case e: IllegalArgumentException =>
+                Dialog.showMessage(this, "You tried to open a stage that is incompatible with the game! Parser is version 1.0.", "Error!"); e.printStackTrace()
+              case e: NoWavesDefinedException =>
+                Dialog.showMessage(this, "You tried to open a stage that contains no compatible waves! Parser is version 1.0.", "Error!"); e.printStackTrace()
               case e: Throwable => Dialog.showMessage(this, "You tried to open a stage, but there was an unknown error! Parser is version 1.0.\n" + e, "Error!"); e.printStackTrace()
             }
             if (GUI.manager.debug) println("opening stage \"" + GUI.manager.currentStage.name + "\", proceeding to game...")
@@ -177,8 +194,14 @@ object GameScreen extends Panel {
         }
 
         case "game" => {
-          GUI.manager.currentStage.timeLeft -= 5 //aaa
+          //todo
         }
+
+        case "over" =>
+
+        case "end" =>
+
+        case "beat" =>
 
         case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")
       }

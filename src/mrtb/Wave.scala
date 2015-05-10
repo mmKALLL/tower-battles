@@ -24,11 +24,17 @@ class Wave(position: Int) {
   }
 
   def addEnemy(in: Enemy, time: Int) = enemyList += Tuple2(time, Enemy.apply(in))
+  def removeEnemy(in: Enemy) = enemyList = enemyList.filter(a => !(a._2 == in))
   def sortEnemies = enemyList = enemyList.sortBy(_._1)
 
   def update = {
-    enemyList.foreach(_._2.update)
+    for (x <- enemyList.clone) {
+      if (x._1 <= 0) {
+        x._2.update
+      }
+    }
     for (x <- 0 until enemyList.length) {
+      println(enemyList(x)._2.HP)
       enemyList(x) = (enemyList(x)._1 - 1, enemyList(x)._2)
     }
   }

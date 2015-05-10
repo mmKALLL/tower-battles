@@ -20,10 +20,46 @@ import java.io.IOException
 
 class Tower(val name: String, val image: BufferedImage, val cost: Int, val speed: Int, val damage: Int, val range: Int, val upgradesTo: String, val special: String = "") {
 
+  var x = 0
+  var y = 0
+  var reload = speed
   def getCost: Int = cost
+
+  def shoot: Boolean = {
+    if (special == "aoe") {
+      Manager.currentStage.waves.head.enemyList.foreach(a => {
+        if (Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range * 1.5 && a._1 <= 0) {
+          a._2.HP -= damage
+          reload = speed
+        }
+      })
+    } else if (special.take(4) == "slow") {
+      Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range * 1.5 && a._1 <= 0).headOption match {
+        case a: Some[(Int, Enemy)] => a.get._2.HP -= damage; a.get._2.slow = special.drop(4).toInt; reload = speed
+        case None => 
+      }
+    } else {
+      Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range * 1.5 && a._1 <= 0).headOption match {
+        case a: Some[(Int, Enemy)] => a.get._2.HP -= damage; reload = speed
+        case None => 
+      }
+    }
+    false
+  }
 
   def isUpgradeable: Boolean = upgradesTo != null
   def upgradeCost: Int = if (isUpgradeable) Tower.loadTower(upgradesTo).getCost - cost else -1
+  def setCoordinates(pos: Tile) = {
+    x = pos.center._1
+    y = pos.center._2
+  }
+
+  def update = {
+    println(Manager.currentStage.waves.head.enemyList.foreach(a => println(Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)))))
+    if (this.reload > 0)
+      this.reload -= 1
+    else shoot
+  }
 
 }
 
@@ -35,9 +71,10 @@ object Tower {
 
   // Loads a single tower with the specified id; returns null (!!) if not found.
   def loadTower(id: String): Tower = {
-    if (Manager.towerlist.contains(id))
+    if (Manager.towerlist.contains(id)) {
       Manager.towerlist(id)
-    else {
+    }
+      else {
       if (Manager.debug) println("tower with id \"" + id + "\" was not found")
       Manager.stageOK = false
       null

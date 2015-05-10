@@ -25,7 +25,7 @@ object Manager {
   final val VERSION = "1.0"
 
   // Variables to hold the game system's internal state.
-  // Possible gamestates: init, menu, game_setup, game_wave, game_over
+  // Possible gamestates: init, menu, game_setup, game_wave, over
   var gameState = "init"
   // stagelist maps each stage id to its file and an array containing its info (map name, creator name, description)
   var stagelist: Map[String, (File, Array[String])] = null
@@ -63,10 +63,16 @@ object Manager {
     interface.update
   }
   
-  
-  def loseLife(in: Enemy) = {
-    currentStage.lives -= 1
+  // Handler for enemy death
+  def destroy(in: Enemy) = {
     // todo
+    if (in.HP <= 0) {
+      currentStage.gold += in.goldgain
+      currentStage.score += in.scoregain
+    } else {
+      currentStage.loseLife(in.damage)
+    }
+    currentStage.waves.head.removeEnemy(in)
   }
 
   // A method to load one of the stages from the stage list. Called by UI.
@@ -78,7 +84,6 @@ object Manager {
       currentStage = Stage.createStage(name, stagelist(name)._1)
       gameState = "game_setup"
       Enemy.findShortestPath(currentStage.tiles)
-      interface.enterGame
     } else {
       throw new IllegalArgumentException("Tried to load a stage with an id that doesn't exist!!!")
     }
@@ -86,6 +91,7 @@ object Manager {
 
   def exitStage = {
     //todo; a method for exiting the current stage and returning to menu
+    // will not be implemented, game will exit on complete for now
   }
 
   // A string parser for the current wave's phase duration.
