@@ -16,10 +16,10 @@ wall1, arrowtower1, thumper1, sniper1
 !wave
 goldbonus=200
 lifebonus=10
-buildphase=60
+buildphase=1
 type=normal
 # enemy data; name,amount,delay,initialdelay
-greengoblin,12,25,20
+slowblob,12,25,20
 
 !wave
 buildphase=40

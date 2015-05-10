@@ -127,8 +127,9 @@ object GameScreen extends Panel {
 
         // The game field is drawn
         //todo
-        Manager.currentStage.getCurrentWave.enemyList.foreach(a => if (a._1 <= 0) g.drawImage(a._2.image, null, a._2.x + Manager.TILESIZE, a._2.y + Manager.TILESIZE))
-        
+        Manager.currentStage.getCurrentWave.enemyList.foreach(
+            a => if (a._1 <= 0) g.drawImage(a._2.image, null, a._2.x + Manager.TILESIZE - a._2.image.getWidth() / 2, a._2.y + Manager.TILESIZE - a._2.image.getHeight() / 2))
+        Manager.currentStage.tiles.flatten.foreach(a => if (!a.isEmpty) g.drawImage(a.getTower.image, null, a.leftEdge._1 + Manager.TILESIZE, a.upperEdge._2 + Manager.TILESIZE))
       }
 
       case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")

@@ -18,7 +18,7 @@ import java.io.IOException
  * @special The special ability of this tower; 0 indicates no special.
  */
 
-class Tower(name: String, image: BufferedImage, cost: Int, speed: Int, damage: Int, range: Int, upgradesTo: String, special: String = "") {
+class Tower(val name: String, val image: BufferedImage, val cost: Int, val speed: Int, val damage: Int, val range: Int, val upgradesTo: String, val special: String = "") {
 
   def getCost: Int = cost
 

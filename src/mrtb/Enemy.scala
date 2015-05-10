@@ -27,8 +27,11 @@ class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: In
   var y: Int = Manager.TILESIZE * (Manager.GRIDSIZE._2 / 2 + 1) + Manager.TILESIZE / 2
 
   // A method to handle an enemy death
-  def destroy(killed: Boolean) = {
-
+  def destroy = {
+    if (HP <= 0) {
+      Manager.currentStage.gold += goldgain
+      Manager.currentStage.score += scoregain
+    }
   }
 
   // Handles movement on a pixel scale
@@ -37,7 +40,7 @@ class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: In
     while (movement > 0) {
       if (currentTile == Enemy.shortestPath.length - 1) {
         Manager.loseLife(this)
-        this.destroy(false)
+        this.destroy
       } else {
 
         val a = Enemy.shortestPath(currentTile)
@@ -99,8 +102,8 @@ class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: In
               currentTile += 1
               nextTile += 1
             } else {
-              x += ((a.upperEdge._1 - x) / distance * movement).toInt
-              y += ((a.upperEdge._2 - y) / distance * movement).toInt
+              x += ((a.upperEdge._1 - x) / distance * movement * 1.2).toInt
+              y += ((a.upperEdge._2 - y) / distance * movement * 1.2).toInt
               movement = 0
             }
           }
@@ -133,13 +136,13 @@ object Enemy {
   // but I plan to make that definable in v1.1, and mid-wave tower placement possible in v1.2.
   // The return value denotes whether a path is available.
   def findShortestPath(tiles: Array[Array[Tile]]): Boolean = {
-    val goal = tiles(Manager.GRIDSIZE._1 - 1)(Manager.GRIDSIZE._2 / 2 + 1)
+    val goal = tiles(Manager.GRIDSIZE._1 - 1)(Manager.GRIDSIZE._2 / 2)
     var done = false
 
     // The heuristic is based on Euclidean distance.
     // An improved heuristic would be to check for surrounding tiles' towers and
     // multiply the distance with the path's dangerousness.
-    def getHeuristic(a: Tile): Double = Math.sqrt((a.getX - goal.getX) * (a.getX - goal.getX)) + Math.sqrt((a.getY - goal.getY) * (a.getY - goal.getY))
+    def getHeuristic(a: Tile): Double = Math.sqrt((a.getX - goal.getX) * (a.getX - goal.getX)) + ((a.getY - goal.getY) * (a.getY - goal.getY))
     // The 1.3 advanced version
     //Math.abs(Manager.GRIDSIZE._1 * 1.0 - a.getX * 1.0) + Math.abs(Manager.GRIDSIZE._2 * 1.0 - a.getY * 1.0) - 
     //Math.min(Math.abs(Manager.GRIDSIZE._1 * 1.0 - a.getX * 1.0), Math.abs(Manager.GRIDSIZE._2 * 1.0 - a.getY * 1.0)) * 0.3
@@ -149,7 +152,7 @@ object Enemy {
     tiles.flatten.foreach(a => weights += a -> (99999.9, getHeuristic(a), null))
 
     // Open is a priority queue consisting of the tiles currently under consideration, ordered by best distance + heuristic.
-    var open = PriorityQueue[Tile](tiles(0)(Manager.GRIDSIZE._2 / 2 + 1))(Ordering.by[Tile, Double](a => weights(a)._1 + weights(a)._2))
+    var open = PriorityQueue[Tile](tiles(0)(Manager.GRIDSIZE._2 / 2 + 1))(Ordering[Double].on(a => - weights(a)._1 - weights(a)._2))
     var closed = Buffer[Tile]() // lookup unordered is O(n) (!!!) aaa
 
     var current = open.dequeue
@@ -184,7 +187,7 @@ object Enemy {
         return false
       else {
         closed += current
-        for (x <- getNeighbors(current)) {
+        for (x <- getNeighbors(current).filter(_.isEmpty)) {
           if (closed.contains(x) && weights(current)._1 + 1 < weights(x)._1) {
             weights(x) = (weights(current)._1 + 1, weights(x)._2, current)
           } else if (open.exists(x == _) && weights(current)._1 + 1 < weights(x)._1) {
@@ -208,7 +211,6 @@ object Enemy {
     }
 
     shortestPath = result.toArray.reverse
-    println(shortestPath.map(a => a.getX + " " + a.getY + ", ").flatten)
     true
   }
 

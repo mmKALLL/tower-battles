@@ -22,7 +22,7 @@ class Stage {
   var gold = 0
   var score = 0
   var phaseStart = System.currentTimeMillis
-  var phaseTime = 5
+  var phaseTime = 2
   var timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
 
   var waves = Buffer[Wave]()
@@ -32,7 +32,7 @@ class Stage {
   def setWaves(in: Buffer[Wave]) = waves = in
   def setTowers(in: Buffer[Tower]) = availableTowers = in
   def getCurrentWave: Wave = waves.head
-  def placeTower = ???
+  def placeTower(id: String, x: Int, y: Int) = tiles(x - 1)(y - 1).setTower(Tower.loadTower(id))
   
   def startWave = {
     score += 3 * timeLeft
@@ -185,6 +185,11 @@ object Stage {
     waves.foreach(_.sortEnemies)
     result.setWaves(waves)
     result.gold = waves(0).goldbonus
+    result.lives = waves(0).lifebonus
+    result.phaseTime = waves(0).buildphase
+    result.placeTower("arrowtower1", 5, 5)
+    result.placeTower("arrowtower1", 5, 6)
+    result.placeTower("arrowtower1", 6, 7)
     result
   }
 

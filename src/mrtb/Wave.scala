@@ -13,7 +13,7 @@ class Wave(position: Int) {
   var buildphase = 10
   var goldbonus = 0
   var lifebonus = 0
-  
+
   def setBuildPhase(in: Int) = buildphase = in
   def setGoldBonus(in: Int) = goldbonus = in
   def setLifeBonus(in: Int) = lifebonus = in
@@ -22,17 +22,17 @@ class Wave(position: Int) {
     text = descriptionS
     color = descriptionC
   }
-  
+
   def addEnemy(in: Enemy, time: Int) = enemyList += Tuple2(time, Enemy.apply(in))
   def sortEnemies = enemyList = enemyList.sortBy(_._1)
-  
+
   def update = {
     enemyList.foreach(_._2.update)
-    for (x <- 0 until enemyList.length)
+    for (x <- 0 until enemyList.length) {
       enemyList(x) = (enemyList(x)._1 - 1, enemyList(x)._2)
-    println(enemyList.head._2 + " at: " + enemyList.head._2.x + " " + enemyList.head._2.y)
+    }
   }
-  
+
   def getFirstEnemy: Enemy = enemyList.head._2
   //todo, returns the furthest enemy in the specified range
   def getBestEnemy(x: Int, y: Int, range: Int): Enemy = ???
