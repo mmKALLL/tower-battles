@@ -29,6 +29,8 @@ class Wave(position: Int) {
   }
   
   def getFirstEnemy: Enemy = enemyList.head._2
+  //todo, returns the furthest enemy in the specified range
+  def getBestEnemy(x: Int, y: Int, range: Int): Enemy = ???
 
   def descriptionS: String = wavetype match {
     case "normal" => position + ": Normal"

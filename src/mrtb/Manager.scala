@@ -35,9 +35,9 @@ object Manager {
   var currentStage: Stage = null
   var stageOK: Boolean = true
   var debug = false
-  
+
   // A timer to keep track with the real-time events ingame.
-  val animationTimer = Ticker(1000/FPS, true) { if(gameState.take(4) == "game") this.update }
+  val animationTimer = Ticker(1000 / FPS, true) { if (gameState.take(4) == "game") this.update }
 
   // The GUI is designed to be 800x480; don't change these values!
   var interface: mrtb.gui.GUI = null
@@ -47,7 +47,7 @@ object Manager {
     if (!args.isEmpty)
       if (args(0) == "-debug")
         debug = true
-        
+
     towerlist = Tower.loadTowers
     enemylist = Enemy.loadEnemies
     stagelist = Stage.listStages(STAGEDIRECTORY)
@@ -57,11 +57,13 @@ object Manager {
   // Updates are chained "events" that are fired by the animationTimer, and passed
   // along to keep up the game state with time passing.
   def update = {
-    currentStage.update
+    if (gameState.take(4) == "game") {
+      currentStage.update
+      currentStage.getCurrentWave.update
+    }
     interface.update
-    currentStage.getCurrentWave.update
   }
-  
+
   // A method to load one of the stages from the stage list. Called by UI.
   // Individual stages' names need to be unique.
   def loadStage(name: String) = {
@@ -70,22 +72,22 @@ object Manager {
     if (stagelist.contains(name)) {
       currentStage = Stage.createStage(name, stagelist(name)._1)
       gameState = "game_prewave"
+      Enemy.findShortestPath(currentStage.tiles)
       interface.enterGame
     } else {
       throw new IllegalArgumentException("Tried to load a stage with an id that doesn't exist!!!")
     }
   }
-  
+
   def exitStage = {
     //todo; a method for exiting the current stage and returning to menu
   }
 
   // A string parser for the current wave's phase duration.
-  def parsePhaseTime: String = if(currentStage.timeLeft % 60 < 10) (currentStage.timeLeft / 60) + ":0" + (currentStage.timeLeft % 60)
-		  					  else (currentStage.timeLeft / 60) + ":" + (currentStage.timeLeft % 60)
+  def parsePhaseTime: String = if (currentStage.timeLeft % 60 < 10) (currentStage.timeLeft / 60) + ":0" + (currentStage.timeLeft % 60)
+  else (currentStage.timeLeft / 60) + ":" + (currentStage.timeLeft % 60)
 
 }
-
 
 /**
  * The Ticker enables the creation of Swing Timers that execute anonymous functions.

@@ -7,6 +7,9 @@ import java.io.BufferedReader
 import java.io.File
 import javax.imageio.ImageIO
 import java.io.IOException
+import scala.collection.mutable.Buffer
+import scala.collection.mutable.Map
+import scala.collection.mutable.PriorityQueue
 
 // The abstract class defines the methods that have to be implemented in all
 // enemy classes. The various classes might have individual solutions to pathfinding etc.
@@ -16,8 +19,12 @@ class Enemy(id: String, image: BufferedImage, var HP: Int, speed: Int, damage: I
   // Negative values hasten, positive values slow down.
   var slow: Int = 0
 
-  var nextTile: Tile = null
-  
+  // An integer denoting the position in the shortestPath array (below).
+  var currentTile: Int = 0
+
+  var x: Int = 0
+  var y: Int = 0
+
   def update = {
     // movespeed = speed * (1 - (slowed / 100))
     ???
@@ -42,14 +49,93 @@ class Enemy(id: String, image: BufferedImage, var HP: Int, speed: Int, damage: I
 object Enemy {
 
   var shortestPath: Array[Tile] = null
-  
-  // The pathfinding algorithm. Entry and exit points are assumed to be static,
+
+  // The pathfinding algorithm, using A*. Entry and exit points are assumed to be static,
   // but I plan to make that definable in v1.1, and mid-wave tower placement possible in v1.2.
-  def findShortestPath(tiles: Array[Array[Tile]]) = {
-    ???
+  // The return value denotes whether a path is available.
+  def findShortestPath(tiles: Array[Array[Tile]]): Boolean = {
+    val goal = tiles(Manager.GRIDSIZE._1 - 1)(Manager.GRIDSIZE._2 / 2 + 1)
+    var done = false
+
+    // The heuristic is based on Euclidean distance.
+    // An improved heuristic would be to check for surrounding tiles' towers and
+    // multiply the distance with the path's dangerousness.
+    def getHeuristic(a: Tile): Double = Math.sqrt((a.getX - goal.getX) * (a.getX - goal.getX)) + Math.sqrt((a.getY - goal.getY) * (a.getY - goal.getY))
+    // The 1.3 version
+    //Math.abs(Manager.GRIDSIZE._1 * 1.0 - a.getX * 1.0) + Math.abs(Manager.GRIDSIZE._2 * 1.0 - a.getY * 1.0) - 
+    //Math.min(Math.abs(Manager.GRIDSIZE._1 * 1.0 - a.getX * 1.0), Math.abs(Manager.GRIDSIZE._2 * 1.0 - a.getY * 1.0)) * 0.3
+
+    // A map containing a reference to the best distance, heuristic distance, and parent tile.
+    var weights = Map[Tile, (Double, Double, Tile)]()
+    tiles.flatten.foreach(a => weights += a -> (99999.9, getHeuristic(a), null))
+
+    // Open is a priority queue consisting of the tiles currently under consideration, ordered by best distance + heuristic.
+    var open = PriorityQueue[Tile](tiles(0)(Manager.GRIDSIZE._2 / 2 + 1))(Ordering.by[Tile, Double](a => weights(a)._1 + weights(a)._2))
+    var closed = Buffer[Tile]() // lookup unordered is O(n) (!!!) aaa
+
+    var current = open.dequeue
+
+    def getNeighbors(in: Tile): Array[Tile] = {
+      // Check for the edge tiles
+      if (in.getX == 1 || in.getX == Manager.GRIDSIZE._1 || in.getY == 1 || in.getY == Manager.GRIDSIZE._2) {
+        (in.getX, in.getY) match {
+          case (1, 1) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY))
+          case (1, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2))
+          case (Manager.GRIDSIZE._1, 1) => Array(tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
+          case (Manager.GRIDSIZE._1, Manager.GRIDSIZE._2) => Array(tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
+          case (1, _) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY))
+          case (Manager.GRIDSIZE._1, _) => Array(tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+          case (_, 1) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+          case (_, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
+        }
+      } else Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+    }
+
+    // A method for getting the real distance between two adjacent nodes.
+    def getRealDistance(x1: Int, y1: Int, x2: Int, y2: Int) = {
+      (x1 - x2, y1 - y2) match {
+        case _ => // Unimplemented; the graph structure needs heavy reworking in order to get subtile diagonal movement to work properly.
+      }
+    }
+
+    // The current tile is removed from the queue, then its adjacent tiles are added to consideration.
+    while (!done) {
+      if (current == goal)
+        done = true
+      else if (open.isEmpty)
+        return false
+      else {
+        closed += current
+        for (x <- getNeighbors(current)) {
+          if (closed.contains(x) && weights(current)._1 + 1 < weights(x)._1) {
+            weights(x) = (weights(current)._1 + 1, weights(x)._2, current)
+          } else if (open.exists(x == _) && weights(current)._1 + 1 < weights(x)._1) {
+            weights(x) = (weights(current)._1 + 1, weights(x)._2, current)
+          } else if (!closed.contains(x) && !open.exists(x == _)) {
+            weights(x) = (weights(current)._1 + 1, weights(x)._2, current)
+            open += x
+          }
+        }
+      }
+
+      println(weights)
+      current = open.dequeue
+    }
+
+    current = goal
+
+    var result = Buffer[Tile](goal)
+
+    while (current != tiles(0)(Manager.GRIDSIZE._2 / 2 + 1)) {
+      result += weights(current)._3
+      current = weights(current)._3
+    }
+
+    shortestPath = result.toArray.reverse
+
+    true
   }
-  
-  
+
   def loadEnemy(id: String): Enemy = {
     if (Manager.enemylist.contains(id))
       Manager.enemylist(id)
@@ -113,6 +199,5 @@ object Enemy {
     enemies
 
   }
-
 
 }
