@@ -86,7 +86,7 @@ object GameScreen extends Panel {
         g.fillRect(size.width - 150, 342, 120, 110) // Selection info
         g.fillRect(tileSize, tileSize * (gridHeight + 1) + 20, tileSize * gridWidth, 46) // Wave info
 
-        // Then, entry and exit points for the enemies are added.
+        // Then, the entry and exit points for the enemies are colored.
         g.setColor(new Color(255, 140, 140))
         g.fillRect(tileSize, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
         g.setColor(new Color(140, 255, 140))
@@ -127,6 +127,7 @@ object GameScreen extends Panel {
 
         // The game field is drawn
         //todo
+        Manager.currentStage.getCurrentWave.enemyList.foreach(a => if (a._1 <= 0) g.drawImage(a._2.image, null, a._2.x + Manager.TILESIZE, a._2.y + Manager.TILESIZE))
         
       }
 
@@ -166,16 +167,16 @@ object GameScreen extends Panel {
             try {
               GUI.manager.loadStage("Test Map")
             } catch {
-              case e: IllegalArgumentException => Dialog.showMessage(this, "You tried to open a stage that is incompatible with the game! Parser is version 1.0.", "Error!")
-              case e: NoWavesDefinedException => Dialog.showMessage(this, "You tried to open a stage that contains no compatible waves! Parser is version 1.0.", "Error!")
-              case _ => Dialog.showMessage(this, "You tried to open a stage, but there was an unknown error! Parser is version 1.0.", "Error!")
+              case e: IllegalArgumentException => Dialog.showMessage(this, "You tried to open a stage that is incompatible with the game! Parser is version 1.0.", "Error!"); e.printStackTrace()
+              case e: NoWavesDefinedException => Dialog.showMessage(this, "You tried to open a stage that contains no compatible waves! Parser is version 1.0.", "Error!"); e.printStackTrace()
+              case e: Throwable => Dialog.showMessage(this, "You tried to open a stage, but there was an unknown error! Parser is version 1.0.\n" + e, "Error!"); e.printStackTrace()
             }
             if (GUI.manager.debug) println("opening stage \"" + GUI.manager.currentStage.name + "\", proceeding to game...")
           }
         }
 
         case "game" => {
-          GUI.manager.currentStage.lives -= 1 //aaa
+          GUI.manager.currentStage.timeLeft -= 5 //aaa
         }
 
         case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")

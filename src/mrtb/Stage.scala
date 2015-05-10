@@ -18,26 +18,39 @@ class Stage {
   var name = "test"
   var maker = "unknown"
   var lives = 10
-  var currentWave = 1
-  var betweenWaves = true   // A variable for future use.
+  var betweenWaves = true // A variable for future use.
   var gold = 0
   var score = 0
   var phaseStart = System.currentTimeMillis
-  var phaseTime = 65
-  var timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis) / 1000
+  var phaseTime = 5
+  var timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
 
   var waves = Buffer[Wave]()
   var availableTowers = Buffer[Tower]()
-  val tiles = Array.ofDim[Tile](Manager.GRIDSIZE._1, Manager.GRIDSIZE._2)
+  val tiles = Array.tabulate[Tile](Manager.GRIDSIZE._1, Manager.GRIDSIZE._2)((a, b) => new Tile(a + 1, b + 1))
 
   def setWaves(in: Buffer[Wave]) = waves = in
   def setTowers(in: Buffer[Tower]) = availableTowers = in
-  def getCurrentWave: Wave = waves(currentWave - 1)
+  def getCurrentWave: Wave = waves.head
+  def placeTower = ???
+  
+  def startWave = {
+    score += 3 * timeLeft
+    Enemy.findShortestPath(tiles)
+    Manager.gameState = "game_wave"
+  }
+  
+  def nextWave = {
+    Manager.gameState = "game_setup"
+      // todo
+  }
 
   def update = {
-    timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis) / 1000
-    if (timeLeft <= 0) {
-      //todo
+    timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
+    if (timeLeft <= 0 && Manager.gameState == "game_setup") {
+      startWave
+    } else if (Manager.gameState == "game_wave") {
+      waves.head.update
     }
   }
 }
@@ -45,7 +58,7 @@ class Stage {
 /**
  * The singleton object Stage provides functions for reading and verifying stage data from external files.
  * The main focus for version 1.1 would be to improve the leniency and tolerance with the file parsing.
- * 
+ *
  * The NoWavesException is thrown when the stage file contains no compatible enemy wave definitions.
  */
 class NoWavesDefinedException(message: String = "") extends Exception(message)
@@ -121,6 +134,8 @@ object Stage {
                       res.setBuildPhase(s.split("=")(1).trim.toInt)
                     } catch { case _: Throwable => if (Manager.debug) println("buildphase in wave #" + waves.length + 1 + " is not a number, ignoring") }
                     case "type" => res.setType(s.split("=")(1).trim)
+                    case "goldbonus" => res.setGoldBonus(s.split("=")(1).trim.toInt)
+                    case "lifebonus" => res.setLifeBonus(s.split("=")(1).trim.toInt)
                     case _ => if (Manager.debug) println("unknown value defined in wave #" + waves.length + 1 + ", ignoring")
                   }
                 } else {
@@ -158,16 +173,15 @@ object Stage {
       } else s = r.readLine()
     }
 
-    if (version != "1.0") 
+    if (version != "1.0")
       throw new IllegalArgumentException("You tried to load a map file that is incompatible with the parser, version " + Manager.VERSION + ".")
 
     if (waves.length == 0)
       throw new NoWavesDefinedException("You tried to load a map file with no waves defined.")
-      
+
     // If parsing is done, proceed to modify the result before returning it.
     //todo
-    
-    println(waves)
+    if (Manager.debug) println(waves)
     waves.foreach(_.sortEnemies)
     result.setWaves(waves)
     result.gold = waves(0).goldbonus

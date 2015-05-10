@@ -15,6 +15,7 @@ wall1, arrowtower1, thumper1, sniper1
 # possible types are: normal, slow, fast, mixed, flying, spawning, boss
 !wave
 goldbonus=200
+lifebonus=10
 buildphase=60
 type=normal
 # enemy data; name,amount,delay,initialdelay

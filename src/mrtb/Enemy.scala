@@ -13,7 +13,7 @@ import scala.collection.mutable.PriorityQueue
 
 // The abstract class defines the methods that have to be implemented in all
 // enemy classes. The various classes might have individual solutions to pathfinding etc.
-class Enemy(id: String, image: BufferedImage, var HP: Int, speed: Int, damage: Int = 1, goldgain: Int, scoregain: Int, var types: String = "normal") {
+class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: Int, val damage: Int = 1, val goldgain: Int, val scoregain: Int, var types: String = "normal") {
 
   // A percentage of slowness that is used to calculate the true speed.
   // Negative values hasten, positive values slow down.
@@ -21,13 +21,92 @@ class Enemy(id: String, image: BufferedImage, var HP: Int, speed: Int, damage: I
 
   // An integer denoting the position in the shortestPath array (below).
   var currentTile: Int = 0
+  var nextTile: Int = 1
 
-  var x: Int = 0
-  var y: Int = 0
+  var x: Int = Manager.TILESIZE / 2
+  var y: Int = Manager.TILESIZE * (Manager.GRIDSIZE._2 / 2 + 1) + Manager.TILESIZE / 2
 
+  // A method to handle an enemy death
+  def destroy(killed: Boolean) = {
+
+  }
+
+  // Handles movement on a pixel scale
   def update = {
-    // movespeed = speed * (1 - (slowed / 100))
-    ???
+    var movement = Math.min(32, speed * (1 - (slow / 100)))
+    while (movement > 0) {
+      if (currentTile == Enemy.shortestPath.length - 1) {
+        Manager.loseLife(this)
+        this.destroy(false)
+      } else {
+
+        val a = Enemy.shortestPath(currentTile)
+        val b = Enemy.shortestPath(nextTile)
+
+        // Check the direction and update position accordingly.
+        (b.getX - a.getX, b.getY - a.getY) match {
+          case (1, 0) => {
+            val distance = Math.sqrt(Math.pow(a.rightEdge._1 - x, 2) + Math.pow(a.rightEdge._2 - y, 2))
+            if (movement > distance) {
+              movement -= distance.toInt
+              x = a.rightEdge._1
+              y = a.rightEdge._2
+              currentTile += 1
+              nextTile += 1
+            } else {
+              x += ((a.rightEdge._1 - x) / distance * movement).toInt
+              y += ((a.rightEdge._2 - y) / distance * movement).toInt
+              movement = 0
+            }
+          }
+
+          case (-1, 0) => {
+            val distance = Math.sqrt(Math.pow(a.leftEdge._1 - x, 2) + Math.pow(a.leftEdge._2 - y, 2))
+            if (movement > distance) {
+              movement -= distance.toInt
+              x = a.leftEdge._1
+              y = a.leftEdge._2
+              currentTile += 1
+              nextTile += 1
+            } else {
+              x += ((a.leftEdge._1 - x) / distance * movement).toInt
+              y += ((a.leftEdge._2 - y) / distance * movement).toInt
+              movement = 0
+            }
+          }
+
+          case (0, 1) => {
+            val distance = Math.sqrt(Math.pow(a.lowerEdge._1 - x, 2) + Math.pow(a.lowerEdge._2 - y, 2))
+            if (movement > distance) {
+              movement -= distance.toInt
+              x = a.lowerEdge._1
+              y = a.lowerEdge._2
+              currentTile += 1
+              nextTile += 1
+            } else {
+              x += ((a.lowerEdge._1 - x) / distance * movement).toInt
+              y += ((a.lowerEdge._2 - y) / distance * movement).toInt
+              movement = 0
+            }
+          }
+
+          case (0, -1) => {
+            val distance = Math.sqrt(Math.pow(a.upperEdge._1 - x, 2) + Math.pow(a.upperEdge._2 - y, 2))
+            if (movement > distance) {
+              movement -= distance.toInt
+              x = a.upperEdge._1
+              y = a.upperEdge._2
+              currentTile += 1
+              nextTile += 1
+            } else {
+              x += ((a.upperEdge._1 - x) / distance * movement).toInt
+              y += ((a.upperEdge._2 - y) / distance * movement).toInt
+              movement = 0
+            }
+          }
+        }
+      }
+    }
   }
 
   def findPath(tiles: Array[Array[Tile]]): Unit = {
@@ -61,7 +140,7 @@ object Enemy {
     // An improved heuristic would be to check for surrounding tiles' towers and
     // multiply the distance with the path's dangerousness.
     def getHeuristic(a: Tile): Double = Math.sqrt((a.getX - goal.getX) * (a.getX - goal.getX)) + Math.sqrt((a.getY - goal.getY) * (a.getY - goal.getY))
-    // The 1.3 version
+    // The 1.3 advanced version
     //Math.abs(Manager.GRIDSIZE._1 * 1.0 - a.getX * 1.0) + Math.abs(Manager.GRIDSIZE._2 * 1.0 - a.getY * 1.0) - 
     //Math.min(Math.abs(Manager.GRIDSIZE._1 * 1.0 - a.getX * 1.0), Math.abs(Manager.GRIDSIZE._2 * 1.0 - a.getY * 1.0)) * 0.3
 
@@ -77,24 +156,23 @@ object Enemy {
 
     def getNeighbors(in: Tile): Array[Tile] = {
       // Check for the edge tiles
-      if (in.getX == 1 || in.getX == Manager.GRIDSIZE._1 || in.getY == 1 || in.getY == Manager.GRIDSIZE._2) {
-        (in.getX, in.getY) match {
-          case (1, 1) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY))
-          case (1, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2))
-          case (Manager.GRIDSIZE._1, 1) => Array(tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
-          case (Manager.GRIDSIZE._1, Manager.GRIDSIZE._2) => Array(tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
-          case (1, _) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY))
-          case (Manager.GRIDSIZE._1, _) => Array(tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
-          case (_, 1) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
-          case (_, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
-        }
-      } else Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+      (in.getX, in.getY) match {
+        case (1, 1) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY))
+        case (1, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2))
+        case (Manager.GRIDSIZE._1, 1) => Array(tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+        case (Manager.GRIDSIZE._1, Manager.GRIDSIZE._2) => Array(tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
+        case (1, _) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY))
+        case (Manager.GRIDSIZE._1, _) => Array(tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+        case (_, 1) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+        case (_, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
+        case _ => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+      }
     }
 
     // A method for getting the real distance between two adjacent nodes.
     def getRealDistance(x1: Int, y1: Int, x2: Int, y2: Int) = {
       (x1 - x2, y1 - y2) match {
-        case _ => // Unimplemented; the graph structure needs heavy reworking in order to get subtile diagonal movement to work properly.
+        case _ => // Unimplemented; the graph structure would need heavy reworking, and easier to implement in the enemy itself.
       }
     }
 
@@ -102,7 +180,7 @@ object Enemy {
     while (!done) {
       if (current == goal)
         done = true
-      else if (open.isEmpty)
+      else if (open.isEmpty && !closed.isEmpty)
         return false
       else {
         closed += current
@@ -118,21 +196,19 @@ object Enemy {
         }
       }
 
-      println(weights)
       current = open.dequeue
     }
 
+    // After finding the path, process it
     current = goal
-
     var result = Buffer[Tile](goal)
-
     while (current != tiles(0)(Manager.GRIDSIZE._2 / 2 + 1)) {
       result += weights(current)._3
       current = weights(current)._3
     }
 
     shortestPath = result.toArray.reverse
-
+    println(shortestPath.map(a => a.getX + " " + a.getY + ", ").flatten)
     true
   }
 
@@ -144,6 +220,9 @@ object Enemy {
       null
     }
   }
+
+  // The apply function copies an enemy.
+  def apply(in: Enemy): Enemy = new Enemy(in.id, in.image, in.HP, in.speed, in.damage, in.goldgain, in.scoregain, in.types)
 
   // The method to parse the enemies.txt file; essentially the same as the Tower parser.
   def loadEnemies: Map[String, Enemy] = {
@@ -197,7 +276,6 @@ object Enemy {
     }
 
     enemies
-
   }
 
 }

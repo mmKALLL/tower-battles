@@ -21,6 +21,10 @@ class Tile (x: Int, y: Int, initialTower: Tower = null) {
   
   def getX = x
   def getY = y
+  def leftEdge = (Manager.TILESIZE * (x - 1), Manager.TILESIZE * (y - 1) + Manager.TILESIZE / 2)
+  def rightEdge = (Manager.TILESIZE * x, Manager.TILESIZE * (y - 1) + Manager.TILESIZE / 2)
+  def upperEdge = (Manager.TILESIZE * (x - 1) + Manager.TILESIZE / 2, Manager.TILESIZE * (y - 1))
+  def lowerEdge = (Manager.TILESIZE * (x - 1) + Manager.TILESIZE / 2, Manager.TILESIZE * (y))
   
   // A function for drawing the contents of this tile onto the screen.
   def drawTile(g: Graphics2D) = {

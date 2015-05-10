@@ -59,9 +59,14 @@ object Manager {
   def update = {
     if (gameState.take(4) == "game") {
       currentStage.update
-      currentStage.getCurrentWave.update
     }
     interface.update
+  }
+  
+  
+  def loseLife(in: Enemy) = {
+    currentStage.lives -= 1
+    // todo
   }
 
   // A method to load one of the stages from the stage list. Called by UI.
@@ -71,7 +76,7 @@ object Manager {
     if (debug) println("stages found: " + stagelist + "\ntowers found: " + towerlist)
     if (stagelist.contains(name)) {
       currentStage = Stage.createStage(name, stagelist(name)._1)
-      gameState = "game_prewave"
+      gameState = "game_setup"
       Enemy.findShortestPath(currentStage.tiles)
       interface.enterGame
     } else {
