@@ -152,7 +152,7 @@ object Enemy {
 
     // Open is a priority queue consisting of the tiles currently under consideration, ordered by best distance + heuristic.
     var open = PriorityQueue[Tile](tiles(0)(5))(Ordering[Double].on(a => -weights(a)._1 - weights(a)._2)) // negative because highest priority first
-    var closed = Buffer[Tile]() // lookup unordered is O(n) (!!!) aaa
+    var closed = Buffer[Tile]() // lookup unordered is O(n) ....
 
     var current = open.dequeue
 
@@ -247,6 +247,8 @@ object Enemy {
     true
   }
 
+  
+  
   def loadEnemy(id: String): Enemy = {
     if (Manager.enemylist.contains(id))
       Manager.enemylist(id)

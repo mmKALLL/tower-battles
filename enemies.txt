@@ -8,8 +8,8 @@ id=greengoblin
 image=greengoblin.png
 hp=70
 damage=1
-speed=40
-goldgain=10
+speed=35
+goldgain=4
 scoregain=10
 
 !defineunit
@@ -18,5 +18,5 @@ image=slowblob.png
 hp=140
 damage=1
 speed=10
-goldgain=15
+goldgain=6
 scoregain=10

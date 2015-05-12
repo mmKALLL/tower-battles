@@ -17,6 +17,7 @@ import scala.swing.Dialog
 import mrtb._
 import scala.swing.Publisher
 import scala.collection.mutable.Queue
+import java.awt.event.MouseListener
 
 /**
  * A Panel that uses Graphics2D to paint the wanted images etc.
@@ -33,7 +34,7 @@ import scala.collection.mutable.Queue
  * a modifiable UI as well.
  *
  * Pattern matching is used a lot. Crude benchmarking showed that on my subpar hardware the
- * drawing was often done within 1 ms. Since this seems to be by far the most resource-intensive
+ * drawing was often done in ~1 ms. Since this seems to be by far the most resource-intensive
  * part of the software, I'm delighted with the results. Running the game very smoothly even
  * on a limited system such as the OpenPandora should be well within realistic limits.
  */
@@ -115,7 +116,7 @@ object GameScreen extends Panel {
         g.fillRect(size.width - 150, 122, 120, 200) // Tower selector
         g.fillRect(size.width - 150, 342, 120, 110) // Selection info
         g.fillRect(tileSize, tileSize * (gridHeight + 1) + 20, tileSize * gridWidth, 46) // Wave info
-        
+
         // The game grid itself is squared in, along with tower selector.
         g.setColor(new Color(215, 215, 215))
         g.setStroke(new BasicStroke(1))
@@ -139,8 +140,8 @@ object GameScreen extends Panel {
         // Borders are added to the major UI elements.
         g.setColor(new Color(45, 45, 45))
         g.setStroke(new BasicStroke(2))
-        g.drawRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight)
-        g.drawRect(size.width - 150, 32, 120 + 2, 70 + 2)
+        g.drawRect(tileSize - 1, tileSize - 1, tileSize * gridWidth + 2, tileSize * gridHeight + 2)
+        g.drawRect(size.width - 150, 32, 120, 70)
         g.drawRect(size.width - 150, 122, 120, 200)
         g.drawRect(size.width - 150, 342, 120, 110)
         g.drawRect(tileSize, tileSize * (gridHeight + 1) + 20, tileSize * gridWidth, 46)
@@ -168,19 +169,25 @@ object GameScreen extends Panel {
           a => if (!a.isEmpty) g.drawImage(a.getTower.image, null, a.leftEdge._1 + Manager.TILESIZE + 1, a.upperEdge._2 + Manager.TILESIZE + 1))
 
         // The UI elements are drawn
+        // First, the towers in the selector:
         for (x <- 0 until Math.min(towers.size, 15)) {
           g.drawImage(towers(x).image, null, size.width - 150 + (x % 3 * 40) + 6, x / 3 * 40 + 126)
         }
 
-        // The tower selection is drawn
+        // Then the selected tower is drawn
         if (selection >= 0 && point.x > 32 && point.x < (Manager.GRIDSIZE._1 + 1) * Manager.TILESIZE && point.y > 32 && point.y < (Manager.GRIDSIZE._2 + 1) * Manager.TILESIZE) {
           g.drawImage(towers(selection).image, null, point.x - point.x % 32 + 1, point.y - point.y % 32 + 1)
           g.setColor(new Color(255, 40, 40))
           g.drawOval(point.x - point.x % 32 + 16 - towers(selection).range, point.y - point.y % 32 + 16 - towers(selection).range, 2 * towers(selection).range, 2 * towers(selection).range)
           g.setColor(new Color(255, 40, 40))
-
-          //todo
         }
+
+        // The wave display
+        Manager.currentStage.waves.take(5).foreach(a => {
+          g.setColor(new Color(0, 0, 0))
+          g.setColor(a.descriptionC)
+          // TODO:qas
+        })
 
         // The shots are drawn and displayed for three frames; a very... crude... solution, but it works. 
         var temp = (0, 0, 0, 0, 0)
@@ -205,7 +212,7 @@ object GameScreen extends Panel {
             g.setStroke(new BasicStroke(temp._1))
             g.drawLine(temp._2, temp._3, temp._4, temp._5)
           }
-        
+
         g.setColor(new Color(0, 0, 0))
         g.setStroke(new BasicStroke(1))
 
@@ -255,19 +262,21 @@ object GameScreen extends Panel {
                 Dialog.showMessage(this, "You tried to open a stage that contains no compatible waves! Parser is version 1.0.", "Error!"); e.printStackTrace()
               case e: Throwable => Dialog.showMessage(this, "You tried to open a stage, but there was an unknown error! Parser is version 1.0.\n" + e, "Error!"); e.printStackTrace()
             }
-            if (GUI.manager.debug) println("opening stage \"" + GUI.manager.currentStage.name + "\", proceeding to game...")
+            if (GUI.manager.debug) println("opening stage \"" + GUI.manager.currentStage + "\", proceeding to game...")
           }
         }
 
         case "game_setup" => {
-          // If the tower selector is clicked
-          
-          if (b.point.x > size.width - 150 && b.point.x < size.width - 30 && b.point.y > 122 && b.point.y < 322) {
+          // Right click removes tower selection
+          if (b.peer.getButton() == java.awt.event.MouseEvent.BUTTON2 || b.peer.getButton() == java.awt.event.MouseEvent.BUTTON3)
+            selection = -1
+          // If the tower selector is clicked, select the one
+          else if (b.point.x > size.width - 150 && b.point.x < size.width - 30 && b.point.y > 122 && b.point.y < 322) {
             this.selection = (b.point.x - (size.width - 150)) / 40 + 3 * ((b.point.y - 122) / 40)
             if (selection >= towers.length)
               selection = -1
 
-          // If the game field is clicked
+            // If the game field is clicked
           } else if (b.point.x > 32 && b.point.x < (Manager.GRIDSIZE._1 + 1) * Manager.TILESIZE && b.point.y > 32 && b.point.y < (Manager.GRIDSIZE._2 + 1) * Manager.TILESIZE) {
             if (selection >= 0) {
               if (Manager.currentStage.placeTower(towers(selection), (b.point.x) / Manager.TILESIZE, (b.point.y) / Manager.TILESIZE, false))
@@ -275,6 +284,8 @@ object GameScreen extends Panel {
             } else if (false) {
               // todo: tower selection and upgrade
             }
+          } else if (false) {
+            // TODO: add skip to wave-button, speed-up, and other UI goodies
           }
         }
 

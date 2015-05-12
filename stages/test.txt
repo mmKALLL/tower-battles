@@ -9,31 +9,31 @@ creator=mmKALLL
 description=Take on the level used for testing purposes, written about 19 hours before deadline!! *forced laugh*\n\nContains 4 waves.
 
 !availabletowers
-arrowtower1, arrowtower2, arrowtower3, thumper1, thumper2, thumper3, sniper1, sniper2, sniper3, wall1, slowingtower1
+arrowtower1, arrowtower2, arrowtower3, thumper1, thumper2, thumper3, sniper1, sniper2, sniper3, wall1
 
 # Waves start with !wave, followed by type definition. However the type is purely for visual effects.
 # possible types are: normal, slow, fast, mixed, flying, spawning, boss
 !wave
 goldbonus=800
 lifebonus=10
-buildphase=30
+buildphase=25
 type=normal
 # enemy data; name,amount,delay,initialdelay
 slowblob,12,25,20
 
 !wave
-buildphase=40
+buildphase=15
 type=slow
-slowblob,8,20,20
+slowblob,15,20,20
 
 !wave
-buildphase=40
+buildphase=15
 type=mixed
 greengoblin,8,30,5
 slowblob,8,30,20
 
 !wave
-buildphase=40
+buildphase=15
 type=normal
 greengoblin,25,14,15
 

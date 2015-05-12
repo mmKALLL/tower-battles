@@ -15,7 +15,7 @@ import java.io.FileReader
 class Stage {
   // Some variables are created to hold the relevant game-state information.
   // They are initialized here and overwritten by values specified in the stage file.
-  var name = "test"
+  var name = "unknown"
   var maker = "unknown"
   var lives = 10
   var betweenWaves = true // A variable for future use.
@@ -73,7 +73,7 @@ class Stage {
 
   def nextWave = {
     if (waves.length > 1) {
-      waves.drop(1)
+      waves = waves.drop(1)
       phaseStart = System.currentTimeMillis
       phaseTime = waves.head.buildphase
       timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
@@ -99,7 +99,7 @@ class Stage {
     } else if (timeLeft <= 0 && Manager.gameState == "game_setup") {
       startWave
     } else if (Manager.gameState == "game_wave") {
-      timeLeft = 0
+      timeLeft = (System.currentTimeMillis - phaseStart).toInt / 1000
       if (!waves.head.enemyList.isEmpty) {
         waves.head.update
         towers.foreach(_.update)
@@ -164,7 +164,10 @@ object Stage {
         if (s.trim.take(1) == "!") {
           s.trim match {
 
-            case "!info" => s = r.readLine()
+            case "!info" => s = {
+              result.name = this.getStageInfo(stageFile)(0)
+              r.readLine()
+            }
 
             case "!availabletowers" => {
               s = r.readLine()
@@ -240,8 +243,8 @@ object Stage {
       case _: Throwable => Manager.stageOK = false
     }
     // If parsing is done, proceed to modify the result before returning it.
-    //todo
-    if (Manager.debug) println("waves found: " + waves)
+    //todo: ...
+    if (Manager.debug) println("waves found in map " + result.name + ": " + waves)
     waves.foreach(_.sortEnemies)
     result.setWaves(waves)
     result.gold = waves(0).goldbonus

@@ -65,7 +65,6 @@ object Manager {
   
   // Handler for enemy death
   def destroy(in: Enemy) = {
-    // todo
     if (in.HP <= 0) {
       currentStage.gold += in.goldgain
       currentStage.score += in.scoregain
@@ -79,7 +78,7 @@ object Manager {
   // Individual stages' names need to be unique.
   def loadStage(name: String) = {
     stageOK = true
-    if (debug) println("stages found: " + stagelist + "\ntowers found: " + towerlist)
+    if (debug) println("enemies found: " + enemylist + "\nstages found: " + stagelist + "\ntowers found: " + towerlist)
     if (stagelist.contains(name)) {
       currentStage = Stage.createStage(name, stagelist(name)._1)
       gameState = "game_setup"
@@ -113,5 +112,21 @@ object Ticker {
     val t = new Timer(interval, timeOut)
     t.setRepeats(repeat)
     t.start()
+  }
+}
+
+// A handy object for parsing basic written arithmetics; unfortunately, it's unused in v1.0.
+object parseCalc {
+  def apply(in: String) = {
+    var a = 0
+    var b = 0
+    for (x <- in.split('+')) {
+      b = x.split('*').head.trim.toInt
+      for (y <- x.split('*').drop(1)) {
+        b *= y.trim.toInt
+      }
+      a += b
+    }
+    a
   }
 }

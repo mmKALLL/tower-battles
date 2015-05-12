@@ -1,0 +1,31 @@
+# Lines starting with a '#' are comments.
+# Lines started with an '!' denote a block of information.
+
+!Tower Battles 1.0
+
+!info
+name=Single Wave Map
+creator=mmKALLL
+
+!availabletowers
+arrowtower1, arrowtower2, arrowtower3, thumper1, thumper2, thumper3, sniper1, sniper2, sniper3, wall1
+
+!wave
+goldbonus=1400
+lifebonus=1
+buildphase=40
+type=mixed
+# enemy data; name,amount,delay,initialdelay
+slowblob,12,40,0
+greengoblin,12,40,500
+slowblob,8,60,1000
+greengoblin,8,60,1030
+greengoblin,30,15,2350
+slowblob,40,15,2800
+greengoblin,195,10,3610
+slowblob,195,10,3605
+
+
+# High scores are not implemented yet.
+!highscores
+Esa=5000
