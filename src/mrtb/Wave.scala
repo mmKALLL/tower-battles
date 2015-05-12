@@ -30,16 +30,17 @@ class Wave(position: Int) {
   def update = {
     if (enemyList.isEmpty) {
       Manager.currentStage.nextWave
-    }
-    
-    for (x <- enemyList.clone) {
-      if (x._1 <= 0) {
-        x._2.update
+    } else {
+      for (x <- enemyList.clone) {
+        if (x._1 <= 0) {
+          x._2.update
+        }
+      }
+      for (x <- 0 until enemyList.length) {
+        enemyList(x) = (enemyList(x)._1 - 1, enemyList(x)._2)
       }
     }
-    for (x <- 0 until enemyList.length) {
-      enemyList(x) = (enemyList(x)._1 - 1, enemyList(x)._2)
-    }
+
   }
 
   def getFirstEnemy: Enemy = enemyList.head._2

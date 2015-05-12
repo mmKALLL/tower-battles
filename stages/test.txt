@@ -11,14 +11,14 @@ description=Take on the level used for testing purposes, written about 19 hours 
 !availabletowers
 arrowtower1, arrowtower2, arrowtower3, thumper1, thumper2, thumper3, sniper1, sniper2, sniper3, wall1
 
-# Waves start with !wave, followed by type definition. However the type is purely for visual effects.
+# Waves start with !wave, followed by any bonuses given to player upon reaching that wave (initialize lives and gold using these in the first wave), and the type definition. However the type is purely for visual effects. Buildphase measures the time allowed for building towers, in seconds.
 # possible types are: normal, slow, fast, mixed, flying, spawning, boss
 !wave
 goldbonus=800
 lifebonus=10
 buildphase=25
 type=normal
-# enemy data; name,amount,delay,initialdelay
+# enemy data; name,amount,delay,initialdelay (frames)
 slowblob,12,25,20
 
 !wave
