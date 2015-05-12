@@ -37,7 +37,7 @@ class Stage {
 
   def placeTower(in: Tower, x: Int, y: Int, finalize: Boolean): Boolean = {
     val tower = new Tower(in.id, in.name, in.image, in.cost, in.speed, in.damage, in.range, in.upgradesTo, in.special: String)
-    
+
     if (gold >= tower.cost && tiles(x - 1)(y - 1).getTower == null && !(y == 6 && (x == 1 || x == 18))) {
       gold -= tower.cost
       val tile = tiles(x - 1)(y - 1)
@@ -76,15 +76,14 @@ class Stage {
       waves.drop(1)
       phaseStart = System.currentTimeMillis
       phaseTime = waves.head.buildphase
-      var timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
+      timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
       gold += waves.head.goldbonus
       lives += waves.head.lifebonus
       Manager.gameState = "game_setup"
     } else {
-      Manager.gameState = "beat"
-      if (Manager.debug) println("You beat the game!")
+      Manager.gameState = "over"
+      println("You beat the game!")
     }
-    // todo
   }
 
   def loseLife(damage: Int) = {
@@ -95,7 +94,9 @@ class Stage {
   }
 
   def update = {
-    if (timeLeft <= 0 && Manager.gameState == "game_setup") {
+    if (waves.head.enemyList.isEmpty && Manager.gameState == "game_wave") {
+      nextWave
+    } else if (timeLeft <= 0 && Manager.gameState == "game_setup") {
       startWave
     } else if (Manager.gameState == "game_wave") {
       timeLeft = 0
@@ -105,7 +106,6 @@ class Stage {
       }
     } else {
       timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
-      if (waves.head.enemyList.isEmpty && Manager.gameState == "game_wave") nextWave
     }
   }
 }
@@ -159,85 +159,89 @@ object Stage {
     var version = "0"
 
     // While not at end of file, read a line and see whether it starts a block; if so, process the text.
-    while (s != null) {
-      if (s.trim.take(1) == "!") {
-        s.trim match {
+    try {
+      while (s != null) {
+        if (s.trim.take(1) == "!") {
+          s.trim match {
 
-          case "!info" => s = r.readLine()
+            case "!info" => s = r.readLine()
 
-          case "!availabletowers" => {
-            s = r.readLine()
-            while (s != null && s.trim.take(1) != "!") {
-              if (s.trim.take(1) != "#" && !s.isEmpty) {
-                for (x <- s.split(",").map(_.trim)) {
-                  val tower = Tower.loadTower(x)
-                  if (tower != null) towers += tower
-                }
-              }
+            case "!availabletowers" => {
               s = r.readLine()
-            }
-          }
-
-          case "!wave" => {
-            s = r.readLine()
-            val res = new Wave(waves.size + 1)
-            while (s != null && s.trim.take(1) != "!") {
-              if (s.trim.take(1) != "#" && !s.isEmpty()) {
-                if (s.split("=").length == 2) {
-                  s.split("=")(0) match {
-                    case "buildphase" => try {
-                      res.setBuildPhase(s.split("=")(1).trim.toInt)
-                    } catch { case _: Throwable => if (Manager.debug) println("buildphase in wave #" + waves.length + 1 + " is not a number, ignoring") }
-                    case "type" => res.setType(s.split("=")(1).trim)
-                    case "goldbonus" => res.setGoldBonus(s.split("=")(1).trim.toInt)
-                    case "lifebonus" => res.setLifeBonus(s.split("=")(1).trim.toInt)
-                    case _ => if (Manager.debug) println("unknown value defined in wave #" + waves.length + 1 + ", ignoring")
+              while (s != null && s.trim.take(1) != "!") {
+                if (s.trim.take(1) != "#" && !s.isEmpty) {
+                  for (x <- s.split(",").map(_.trim)) {
+                    val tower = Tower.loadTower(x)
+                    if (tower != null) towers += tower
                   }
-                } else {
-                  val temp = s.split(',').map(_.trim)
-                  if (temp.length == 4) {
-                    val enemy = Enemy.loadEnemy(temp(0))
-                    if (enemy != null) {
-                      try {
-                        for (x <- 1 to temp(1).toInt) {
-                          res.addEnemy(enemy, temp(3).toInt + temp(2).toInt * x)
-                        }
-                      } catch { case _: Throwable => if (Manager.debug) println("enemy define in wave #" + waves.length + 1 + "is invalid") }
-
-                    } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
-                  } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
                 }
+                s = r.readLine()
               }
+            }
+
+            case "!wave" => {
+              s = r.readLine()
+              val res = new Wave(waves.size + 1)
+              while (s != null && s.trim.take(1) != "!") {
+                if (s.trim.take(1) != "#" && !s.isEmpty()) {
+                  if (s.split("=").length == 2) {
+                    s.split("=")(0) match {
+                      case "buildphase" => try {
+                        res.setBuildPhase(s.split("=")(1).trim.toInt)
+                      } catch { case _: Throwable => if (Manager.debug) println("buildphase in wave #" + waves.length + 1 + " is not a number, ignoring") }
+                      case "type" => res.setType(s.split("=")(1).trim)
+                      case "goldbonus" => res.setGoldBonus(s.split("=")(1).trim.toInt)
+                      case "lifebonus" => res.setLifeBonus(s.split("=")(1).trim.toInt)
+                      case _ => if (Manager.debug) println("unknown value defined in wave #" + waves.length + 1 + ", ignoring")
+                    }
+                  } else {
+                    val temp = s.split(',').map(_.trim)
+                    if (temp.length == 4) {
+                      val enemy = Enemy.loadEnemy(temp(0))
+                      if (enemy != null) {
+                        try {
+                          for (x <- 1 to temp(1).toInt) {
+                            res.addEnemy(enemy, temp(3).toInt + temp(2).toInt * x)
+                          }
+                        } catch { case _: Throwable => if (Manager.debug) println("enemy define in wave #" + waves.length + 1 + "is invalid") }
+
+                      } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
+                    } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
+                  }
+                }
+                s = r.readLine()
+              }
+              waves += res
+            }
+
+            case "!highscores" => {
+              //            High scores are not yet implemented.
               s = r.readLine()
             }
-            waves += res
+
+            case _ => {
+              if (version == "0") {
+                if (s.contains("1.0")) version = "1.0"
+              } else if (Manager.debug) println("unknown block detected; parser version " + Manager.VERSION + ".")
+              s = r.readLine()
+            }
           }
 
-          case "!highscores" => {
-            //            High scores are not yet implemented.
-            s = r.readLine()
-          }
+        } else s = r.readLine()
+      }
 
-          case _ => {
-            if (version == "0") {
-              if (s.contains("1.0")) version = "1.0"
-            } else if (Manager.debug) println("unknown block detected; parser version " + Manager.VERSION + ".")
-            s = r.readLine()
-          }
-        }
+      if (version != "1.0")
+        throw new IllegalArgumentException("You tried to load a map file that is incompatible with the parser, version " + Manager.VERSION + ".")
 
-      } else s = r.readLine()
+      if (waves.length == 0)
+        throw new NoWavesDefinedException("You tried to load a map file with no waves defined.")
+    
+    } catch {
+      case _: Throwable => Manager.stageOK = false
     }
-
-    if (version != "1.0")
-      throw new IllegalArgumentException("You tried to load a map file that is incompatible with the parser, version " + Manager.VERSION + ".")
-
-    if (waves.length == 0)
-      throw new NoWavesDefinedException("You tried to load a map file with no waves defined.")
-
     // If parsing is done, proceed to modify the result before returning it.
     //todo
-    if (Manager.debug) println(waves)
+    if (Manager.debug) println("waves found: " + waves)
     waves.foreach(_.sortEnemies)
     result.setWaves(waves)
     result.gold = waves(0).goldbonus
@@ -252,9 +256,9 @@ object Stage {
     //todo
     if (Manager.debug)
       if (Manager.stageOK)
-        println(in.getName + " assumed to be a valid stage")
+        println(in.getName + " seems like a valid stage")
       else
-        println(in.getName + " is not a valid stage")
+        println(in.getName + " is not a valid stage!!!")
     Manager.stageOK
 
   }

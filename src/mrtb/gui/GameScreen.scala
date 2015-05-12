@@ -140,7 +140,7 @@ object GameScreen extends Panel {
         g.setColor(new Color(45, 45, 45))
         g.setStroke(new BasicStroke(2))
         g.drawRect(tileSize, tileSize, tileSize * gridWidth, tileSize * gridHeight)
-        g.drawRect(size.width - 150, 32, 120, 70)
+        g.drawRect(size.width - 150, 32, 120 + 2, 70 + 2)
         g.drawRect(size.width - 150, 122, 120, 200)
         g.drawRect(size.width - 150, 342, 120, 110)
         g.drawRect(tileSize, tileSize * (gridHeight + 1) + 20, tileSize * gridWidth, 46)
@@ -260,7 +260,8 @@ object GameScreen extends Panel {
         }
 
         case "game_setup" => {
-          // If a tower is selected
+          // If the tower selector is clicked
+          
           if (b.point.x > size.width - 150 && b.point.x < size.width - 30 && b.point.y > 122 && b.point.y < 322) {
             this.selection = (b.point.x - (size.width - 150)) / 40 + 3 * ((b.point.y - 122) / 40)
             if (selection >= towers.length)
@@ -296,7 +297,7 @@ object GameScreen extends Panel {
       point = m.point
     }
 
-    case k: KeyPressed => {
+    case k: KeyTyped => {
       selection = -1
     }
 

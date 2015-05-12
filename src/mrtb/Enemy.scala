@@ -34,7 +34,7 @@ class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: In
       slow -= 1
     if (HP <= 0)
       Manager.destroy(this)
-    var movement = Math.min(32.0, Math.max(1.43, speed.toDouble * (1 - (slow / 100)) / 10))
+    var movement = Math.min(32.0, Math.max(1.43, speed.toDouble * (1 - (slow.toDouble / 100)) / 10))
     while (movement > 0) {
       if (currentTile == Enemy.shortestPath.length - 1) {
         movement = 0
@@ -109,6 +109,7 @@ class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: In
       }
     }
   }
+  
 
   def findPath(tiles: Array[Array[Tile]]): Unit = {
     if (types == "normal") {
@@ -121,6 +122,9 @@ class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: In
   }
 
 }
+
+
+
 
 /**
  * The companion object provides some helper functions for using external
@@ -138,12 +142,9 @@ object Enemy {
     var done = false
 
     // The heuristic is based on Euclidean distance.
-    // An improved heuristic would be to check for surrounding tiles' towers and
+    // An improved weight method would be to check for surrounding tiles' towers and
     // multiply the distance with the path's dangerousness.
     def getHeuristic(a: Tile): Double = Math.sqrt((a.getX - goal.getX) * (a.getX - goal.getX)) + ((a.getY - goal.getY) * (a.getY - goal.getY))
-    // The 1.3 advanced version
-    //Math.abs(Manager.GRIDSIZE._1 * 1.0 - a.getX * 1.0) + Math.abs(Manager.GRIDSIZE._2 * 1.0 - a.getY * 1.0) - 
-    //Math.min(Math.abs(Manager.GRIDSIZE._1 * 1.0 - a.getX * 1.0), Math.abs(Manager.GRIDSIZE._2 * 1.0 - a.getY * 1.0)) * 0.3
 
     // A map containing a reference to the best distance, heuristic distance, and parent tile.
     var weights = Map[Tile, (Double, Double, Tile)]()
@@ -171,8 +172,6 @@ object Enemy {
     }
 
     def getDiagonalNeighbors(in: Tile): Array[Tile] = {
-      // Check for the edge tiles
-      if (Manager.debug) println(in.getX + " " + in.getY)
       (in.getX, in.getY) match {
         case (1, 1) => Array(tiles(in.getX)(in.getY))
         case (1, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 2))

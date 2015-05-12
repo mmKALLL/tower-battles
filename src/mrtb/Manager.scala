@@ -8,7 +8,7 @@ import java.io.File
 /**
  * Manager is an object that brings together the UI and engine with various abstractions.
  *
- * The aim is to provide a framework of classes that will be mostly adjustable by editing
+ * The aim is to loosely provide a framework of classes that will be mostly adjustable by editing
  * only this file. Along with that, the game is designed to have a high degree of
  * customization options; whether it's by extending the code or writing user-generated
  * content, the aim is to provide a very generic platform for tower-defense games to be
@@ -46,7 +46,7 @@ object Manager {
     gameState = "menu"
     if (!args.isEmpty)
       if (args(0) == "-debug")
-        debug = true
+        debug = true			// Debug messages are specified to be displayed by GUI as well if possible...
 
     towerlist = Tower.loadTowers
     enemylist = Enemy.loadEnemies

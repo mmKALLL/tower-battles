@@ -114,7 +114,7 @@ range=160
 upgrade=null
 special=null
 
-# Slowing special is not yet tested.
+# Slowing is not confirmed to work; try at your own risk.
 !definetower
 id=slowingtower1
 name=Slower L1
@@ -122,9 +122,9 @@ image=slower1.png
 cost=120
 speed=50
 damage=10
-range=50
+range=70
 upgrade=slowingtower2
-special=slow20
+special=slow100
 
 !definetower
 id=slowingtower2
@@ -133,6 +133,6 @@ image=slower2.png
 cost=300
 speed=60
 damage=15
-range=50
+range=70
 upgrade=null
 special=slow40
