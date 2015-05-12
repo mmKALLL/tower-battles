@@ -17,6 +17,7 @@ class Tile (x: Int, y: Int, initialTower: Tower = null) {
   
   def getTower: Tower = placedTower
   def setTower(tower: Tower) = placedTower = tower
+  
   def destroyTower = placedTower = null
   
   def getX = x

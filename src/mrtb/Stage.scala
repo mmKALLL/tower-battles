@@ -27,6 +27,7 @@ class Stage {
 
   var waves = Buffer[Wave]()
   var availableTowers = Buffer[Tower]()
+  var mostRecentTower: Tower = null
   var towers = Buffer[Tower]()
   val tiles = Array.tabulate[Tile](Manager.GRIDSIZE._1, Manager.GRIDSIZE._2)((a, b) => new Tile(a + 1, b + 1))
 
@@ -34,24 +35,27 @@ class Stage {
   def setTowers(in: Buffer[Tower]) = availableTowers = in
   def getCurrentWave: Wave = waves.head
 
-  def placeTower(id: String, x: Int, y: Int, finalize: Boolean): Boolean = {
-    if (gold >= Tower.loadTower(id).cost && tiles(x - 1)(y - 1).getTower == null) {
-      gold -= Tower.loadTower(id).cost
+  def placeTower(in: Tower, x: Int, y: Int, finalize: Boolean): Boolean = {
+    val tower = new Tower(in.id, in.name, in.image, in.cost, in.speed, in.damage, in.range, in.upgradesTo, in.special: String)
+    
+    if (gold >= tower.cost && tiles(x - 1)(y - 1).getTower == null) {
+      gold -= tower.cost
       val tile = tiles(x - 1)(y - 1)
-      tile.setTower(Tower.loadTower(id))
+      tile.setTower(tower)
       if (Enemy.findShortestPath(tiles)) {
         if (!finalize) {
-          gold += Tower.loadTower(id).cost
+          gold += tower.cost
           tile.setTower(null)
           Enemy.findShortestPath(tiles)
           true
         } else {
           tile.getTower.setCoordinates(tile)
           towers += tiles(x - 1)(y - 1).getTower
+          mostRecentTower = tiles(x - 1)(y - 1).getTower
           true
         }
       } else {
-        gold += Tower.loadTower(id).cost
+        gold += tower.cost
         tile.setTower(null)
         Enemy.findShortestPath(tiles)
         false
@@ -72,6 +76,7 @@ class Stage {
       waves.drop(1)
       phaseStart = System.currentTimeMillis
       phaseTime = waves.head.buildphase
+      var timeLeft = (phaseTime * 1000 + phaseStart - System.currentTimeMillis).toInt / 1000
       gold += waves.head.goldbonus
       lives += waves.head.lifebonus
       Manager.gameState = "game_setup"

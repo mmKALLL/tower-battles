@@ -7,6 +7,8 @@ import java.io.FileReader
 import java.io.BufferedReader
 import javax.imageio.ImageIO
 import java.io.IOException
+import java.awt.Graphics2D
+import java.awt.Graphics
 
 /**
  * A class that represents a single tower.
@@ -25,34 +27,47 @@ class Tower(val id: String, val name: String, val image: BufferedImage, val cost
   var reload = speed
   def getCost: Int = cost
 
-  def shoot: Boolean = {
-    if (special == "aoe") {
-      Manager.currentStage.waves.head.enemyList.foreach(a => {
-        if (Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range * 1.5 && a._1 <= 0) {
-          a._2.HP -= damage
-          reload = speed
+  def shoot = {
+    if (special != "wall") {
+      if (special == "aoe") {
+        Manager.currentStage.waves.head.enemyList.foreach(a => {
+          if (Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range * 1.5 && a._1 <= 0) {
+            a._2.HP -= damage
+            reload = speed
+            mrtb.gui.GameScreen.threeFrameShots.enqueue((damage / 20 + 1, x + Manager.TILESIZE, y + Manager.TILESIZE, a._2.x + Manager.TILESIZE, a._2.y + Manager.TILESIZE))
+          }
+        })
+      } else if (special.take(4) == "slow") {
+        Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range + 16 && a._1 <= 0).headOption match {
+          case a: Some[(Int, Enemy)] => {
+            a.get._2.HP -= damage; a.get._2.slow = special.drop(4).toInt
+            reload = speed
+
+            mrtb.gui.GameScreen.threeFrameShots.enqueue((damage / 20 + 1, x + Manager.TILESIZE, y + Manager.TILESIZE, a.get._2.x + Manager.TILESIZE, a.get._2.y + Manager.TILESIZE))
+          }
+          case None =>
         }
-      })
-    } else if (special.take(4) == "slow") {
-      Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range + 16 && a._1 <= 0).headOption match {
-        case a: Some[(Int, Enemy)] => a.get._2.HP -= damage; a.get._2.slow = special.drop(4).toInt; reload = speed
-        case None => 
-      }
-    } else {
-      Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range + 16 && a._1 <= 0).headOption match {
-        case a: Some[(Int, Enemy)] => a.get._2.HP -= damage; reload = speed
-        case None => 
+      } else {
+        Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range + 16 && a._1 <= 0).headOption match {
+          case a: Some[(Int, Enemy)] => {
+            a.get._2.HP -= damage
+            reload = speed
+
+            mrtb.gui.GameScreen.threeFrameShots.enqueue((damage / 20 + 1, x + Manager.TILESIZE, y + Manager.TILESIZE, a.get._2.x + Manager.TILESIZE, a.get._2.y + Manager.TILESIZE))
+          }
+          case None =>
+        }
       }
     }
-    false
   }
 
   def isUpgradeable: Boolean = upgradesTo != null
   def upgradeCost: Int = if (isUpgradeable) Tower.loadTower(upgradesTo).getCost - cost else -1
   def upgrade = {
     ???
+    // todo
   }
-  
+
   def setCoordinates(pos: Tile) = {
     x = pos.center._1
     y = pos.center._2
@@ -76,8 +91,7 @@ object Tower {
   def loadTower(id: String): Tower = {
     if (Manager.towerlist.contains(id)) {
       Manager.towerlist(id)
-    }
-      else {
+    } else {
       if (Manager.debug) println("tower with id \"" + id + "\" was not found")
       Manager.stageOK = false
       null

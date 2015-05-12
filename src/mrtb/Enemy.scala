@@ -11,8 +11,10 @@ import scala.collection.mutable.Buffer
 import scala.collection.mutable.Map
 import scala.collection.mutable.PriorityQueue
 
-// The abstract class defines the methods that have to be implemented in all
-// enemy classes. The various classes might have individual solutions to pathfinding etc.
+/**
+ * The enemy class represents a single enemy on the field, while the object
+ * provides useful functions and file parsing.
+ */
 class Enemy(val id: String, val image: BufferedImage, var HP: Int, val speed: Int, val damage: Int = 1, val goldgain: Int, val scoregain: Int, var types: String = "normal") {
 
   // A percentage of slowness that is used to calculate the true speed.
@@ -148,13 +150,14 @@ object Enemy {
     tiles.flatten.foreach(a => weights += a -> (99999.9, getHeuristic(a), null))
 
     // Open is a priority queue consisting of the tiles currently under consideration, ordered by best distance + heuristic.
-    var open = PriorityQueue[Tile](tiles(0)(5))(Ordering[Double].on(a => - weights(a)._1 - weights(a)._2))
+    var open = PriorityQueue[Tile](tiles(0)(5))(Ordering[Double].on(a => - weights(a)._1 - weights(a)._2)) // negative because highest priority first
     var closed = Buffer[Tile]() // lookup unordered is O(n) (!!!) aaa
 
     var current = open.dequeue
 
     def getNeighbors(in: Tile): Array[Tile] = {
       // Check for the edge tiles
+      println(in.getX + " " + in.getY)
       (in.getX, in.getY) match {
         case (1, 1) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY))
         case (1, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2))
@@ -165,6 +168,22 @@ object Enemy {
         case (_, 1) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
         case (_, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 2)(in.getY - 1))
         case _ => Array(tiles(in.getX)(in.getY - 1), tiles(in.getX - 1)(in.getY - 2), tiles(in.getX - 1)(in.getY), tiles(in.getX - 2)(in.getY - 1))
+      }
+    }
+    
+    def getDiagonalNeighbors(in: Tile): Array[Tile] = {
+      // Check for the edge tiles
+      println(in.getX + " " + in.getY)
+      (in.getX, in.getY) match {
+        case (1, 1) => Array(tiles(in.getX)(in.getY))
+        case (1, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 2))
+        case (Manager.GRIDSIZE._1, 1) => Array(tiles(in.getX - 2)(in.getY))
+        case (Manager.GRIDSIZE._1, Manager.GRIDSIZE._2) => Array(tiles(in.getX - 2)(in.getY - 2))
+        case (1, _) => Array(tiles(in.getX)(in.getY - 2), tiles(in.getX)(in.getY))
+        case (Manager.GRIDSIZE._1, _) => Array(tiles(in.getX - 2)(in.getY - 2), tiles(in.getX - 2)(in.getY))
+        case (_, 1) => Array(tiles(in.getX - 2)(in.getY), tiles(in.getX)(in.getY))
+        case (_, Manager.GRIDSIZE._2) => Array(tiles(in.getX)(in.getY - 2), tiles(in.getX - 2)(in.getY - 2))
+        case _ => Array(tiles(in.getX)(in.getY - 2), tiles(in.getX)(in.getY), tiles(in.getX - 2)(in.getY - 2), tiles(in.getX - 2)(in.getY))
       }
     }
 
@@ -190,6 +209,16 @@ object Enemy {
             weights(x) = (weights(current)._1 + 1, weights(x)._2, current)
           } else if (!closed.contains(x) && !open.exists(x == _)) {
             weights(x) = (weights(current)._1 + 1, weights(x)._2, current)
+            open += x
+          }
+        }
+        for (x <- getDiagonalNeighbors(current).filter(_.isEmpty)) {
+          if (closed.contains(x) && weights(current)._1 + 1.705 < weights(x)._1) {
+            weights(x) = (weights(current)._1 + 1.705, weights(x)._2, current)
+          } else if (open.exists(x == _) && weights(current)._1 + 1.705 < weights(x)._1) {
+            weights(x) = (weights(current)._1 + 1.705, weights(x)._2, current)
+          } else if (!closed.contains(x) && !open.exists(x == _)) {
+            weights(x) = (weights(current)._1 + 1.705, weights(x)._2, current)
             open += x
           }
         }

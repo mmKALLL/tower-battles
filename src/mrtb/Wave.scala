@@ -28,6 +28,10 @@ class Wave(position: Int) {
   def sortEnemies = enemyList = enemyList.sortBy(_._1)
 
   def update = {
+    if (enemyList.isEmpty) {
+      Manager.currentStage.nextWave
+    }
+    
     for (x <- enemyList.clone) {
       if (x._1 <= 0) {
         x._2.update

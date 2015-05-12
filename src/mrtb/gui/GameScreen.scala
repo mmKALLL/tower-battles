@@ -16,6 +16,7 @@ import java.awt.image.BufferedImage
 import scala.swing.Dialog
 import mrtb._
 import scala.swing.Publisher
+import scala.collection.mutable.Queue
 
 /**
  * A Panel that uses Graphics2D to paint the wanted images etc.
@@ -31,9 +32,9 @@ import scala.swing.Publisher
  * methods of creating various interface elements, in order to enable not only custom maps but
  * a modifiable UI as well.
  *
- * Pattern matching is used a lot. Crude benchmarking showed that on my subpar hardware the drawing was done
- * within 1 ms without objects on the field, and in 2-3 ms with them. Since this seems to be by far the most
- * resource-intensive part of the software, I'm delighted with the results. Running the game very smoothly even
+ * Pattern matching is used a lot. Crude benchmarking showed that on my subpar hardware the
+ * drawing was often done within 1 ms. Since this seems to be by far the most resource-intensive
+ * part of the software, I'm delighted with the results. Running the game very smoothly even
  * on a limited system such as the OpenPandora should be well within realistic limits.
  */
 
@@ -46,14 +47,22 @@ object GameScreen extends Panel {
   private val gridHeight = GUI.manager.GRIDSIZE._2
 
   private var towers: Array[Tower] = null
-  private var selection = 0
+  private var selection = -1
+  private var point = new java.awt.Point(0, 0)
+
+  // Three queues that handle the shooting effects; first parameter is width, the others are x1, y1, x2, y2
+  private var oneFrameShots: Queue[(Int, Int, Int, Int, Int)] = Queue()
+  private var twoFrameShots: Queue[(Int, Int, Int, Int, Int)] = Queue()
+  var threeFrameShots: Queue[(Int, Int, Int, Int, Int)] = Queue()
 
   private val fm_SSP14 = this.peer.getFontMetrics(new Font("SansSerif", Font.PLAIN, 14))
   private val fm_SSB14 = this.peer.getFontMetrics(new Font("SansSerif", Font.BOLD, 14))
+  private val as = 0
+
+  // A class used for dialog drawing outside of repaints.
   class DialogDrawEvent extends Event
-  //  private val bg = new BufferedImage(800, 480, BufferedImage.TYPE_INT_RGB)
-  //  private val g2 = bg.createGraphics()
-  //  this.drawBackground
+
+  // Used for benchmarking the repaint.
   private var renderTimeTotal = 0L
   private var frames = 0
 
@@ -62,6 +71,7 @@ object GameScreen extends Panel {
   repaint()
   this.visible = true
 
+  // The main painting method, a lot of things are drawn directly on the Graphics2D object.
   override def paintComponent(g: Graphics2D) = {
     val start = System.nanoTime()
     clear(g)
@@ -105,15 +115,10 @@ object GameScreen extends Panel {
         g.fillRect(size.width - 150, 122, 120, 200) // Tower selector
         g.fillRect(size.width - 150, 342, 120, 110) // Selection info
         g.fillRect(tileSize, tileSize * (gridHeight + 1) + 20, tileSize * gridWidth, 46) // Wave info
-
-        // Then, the entry and exit points for the enemies are colored.
-        g.setColor(new Color(255, 140, 140))
-        g.fillRect(tileSize, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
-        g.setColor(new Color(140, 255, 140))
-        g.fillRect(tileSize * gridWidth, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
-
+        
         // The game grid itself is squared in, along with tower selector.
         g.setColor(new Color(215, 215, 215))
+        g.setStroke(new BasicStroke(1))
         for (x <- 1 until GUI.manager.GRIDSIZE._1) {
           g.drawLine(tileSize * (x + 1), tileSize, tileSize * (x + 1), tileSize * (gridHeight + 1))
         }
@@ -124,6 +129,12 @@ object GameScreen extends Panel {
         g.drawLine(size.width - 70, 122, size.width - 70, 322)
         for (y <- 1 to 4)
           g.drawLine(size.width - 150, 122 + 40 * y, size.width - 30, 122 + 40 * y)
+
+        // Then, the entry and exit points for the enemies are colored.
+        g.setColor(new Color(255, 140, 140))
+        g.fillRect(tileSize, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
+        g.setColor(new Color(140, 255, 140))
+        g.fillRect(tileSize * gridWidth, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
 
         // Borders are added to the major UI elements.
         g.setColor(new Color(45, 45, 45))
@@ -160,9 +171,44 @@ object GameScreen extends Panel {
         for (x <- 0 until Math.min(towers.size, 15)) {
           g.drawImage(towers(x).image, null, size.width - 150 + (x % 3 * 40) + 6, x / 3 * 40 + 126)
         }
-          
+
         // The tower selection is drawn
-        // todo
+        if (selection >= 0 && point.x > 32 && point.x < (Manager.GRIDSIZE._1 + 1) * Manager.TILESIZE && point.y > 32 && point.y < (Manager.GRIDSIZE._2 + 1) * Manager.TILESIZE) {
+          g.drawImage(towers(selection).image, null, point.x - point.x % 32 + 1, point.y - point.y % 32 + 1)
+          g.setColor(new Color(255, 40, 40))
+          g.drawOval(point.x - point.x % 32 + 16 - towers(selection).range, point.y - point.y % 32 + 16 - towers(selection).range, 2 * towers(selection).range, 2 * towers(selection).range)
+          g.setColor(new Color(255, 40, 40))
+
+          //todo
+        }
+
+        // The shots are drawn and displayed for three frames; a very... crude... solution, but it works. 
+        var temp = (0, 0, 0, 0, 0)
+        g.setColor(new Color(165, 85, 5))
+        if (oneFrameShots.length > 1)
+          for (x <- oneFrameShots) {
+            temp = oneFrameShots.dequeue
+            g.setStroke(new BasicStroke(temp._1))
+            g.drawLine(temp._2, temp._3, temp._4, temp._5)
+          }
+        if (twoFrameShots.length > 1)
+          for (x <- twoFrameShots) {
+            temp = twoFrameShots.dequeue
+            oneFrameShots.enqueue(temp)
+            g.setStroke(new BasicStroke(temp._1))
+            g.drawLine(temp._2, temp._3, temp._4, temp._5)
+          }
+        if (threeFrameShots.length > 1)
+          for (x <- threeFrameShots) {
+            temp = threeFrameShots.dequeue
+            twoFrameShots.enqueue(temp)
+            g.setStroke(new BasicStroke(temp._1))
+            g.drawLine(temp._2, temp._3, temp._4, temp._5)
+          }
+        
+        g.setColor(new Color(0, 0, 0))
+        g.setStroke(new BasicStroke(1))
+
       }
 
       case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")
@@ -214,20 +260,24 @@ object GameScreen extends Panel {
         }
 
         case "game_setup" => {
+          // If a tower is selected
           if (b.point.x > size.width - 150 && b.point.x < size.width - 30 && b.point.y > 122 && b.point.y < 322) {
             this.selection = (b.point.x - (size.width - 150)) / 40 + 3 * ((b.point.y - 122) / 40)
-          } else if (selection >= 0) {
-            if (b.point.x > 32 && b.point.x < (Manager.GRIDSIZE._1 + 1) * Manager.TILESIZE && b.point.y > 32 && b.point.y < (Manager.GRIDSIZE._2 + 1) * Manager.TILESIZE) {
-              if (Manager.currentStage.placeTower(towers(selection).id, (b.point.x) / Manager.TILESIZE, (b.point.y) / Manager.TILESIZE, false))
-                Manager.currentStage.placeTower(towers(selection).id, (b.point.x) / Manager.TILESIZE, (b.point.y) / Manager.TILESIZE, true)
+            // If the game field is clicked
+          } else if (b.point.x > 32 && b.point.x < (Manager.GRIDSIZE._1 + 1) * Manager.TILESIZE && b.point.y > 32 && b.point.y < (Manager.GRIDSIZE._2 + 1) * Manager.TILESIZE) {
+            if (selection >= 0) {
+              if (Manager.currentStage.placeTower(towers(selection), (b.point.x) / Manager.TILESIZE, (b.point.y) / Manager.TILESIZE, false))
+                Manager.currentStage.placeTower(towers(selection), (b.point.x) / Manager.TILESIZE, (b.point.y) / Manager.TILESIZE, true)
+            } else if (false) {
+              // todo: tower selection and upgrade
             }
           }
         }
 
         case "game_wave" => {
-          
+
         }
-        
+
         case "over" =>
 
         case "end" =>
@@ -238,16 +288,16 @@ object GameScreen extends Panel {
       }
       repaint()
     }
-    
+
     case m: MouseMoved => {
-      
+      point = m.point
     }
-    
+
     case k: KeyPressed => {
-      if (Manager.gameState.take(4) == "game") {
-        selection = 0
-      }
+      selection = -1
     }
+
+    case d: DialogDrawEvent => //todo
   }
 
 }

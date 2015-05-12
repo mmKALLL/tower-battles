@@ -4,6 +4,7 @@ import scala.swing.SimpleSwingApplication
 import scala.swing.{ MainFrame, FlowPanel, Button }
 import java.awt.Dimension
 import scala.swing.Dialog
+import java.awt.Graphics2D
 
 /**
  * The GUI class. Initially I attempted to set it up using Scage, but due to an
@@ -43,7 +44,7 @@ class GUI(width: Int, height: Int) extends MainFrame {
   this.preferredSize = new Dimension(width + 6, height + 28) //padding to conform the borders on Win7
   this.contents = GameScreen
   this.resizable = false
-  this.title = "Tower Battles ver 0.7.03"
+  this.title = "Tower Battles ver 0.7.47"
   this.centerOnScreen
   this.repaint()
   this.visible = true
@@ -51,7 +52,7 @@ class GUI(width: Int, height: Int) extends MainFrame {
   // Various functions
   def top: MainFrame = this
   def update = this.repaint()
-
+  
   // Event handling
   this.listenTo(GameScreen)
 
