@@ -18,7 +18,7 @@ import java.io.IOException
  * @special The special ability of this tower; 0 indicates no special.
  */
 
-class Tower(val name: String, val image: BufferedImage, val cost: Int, val speed: Int, val damage: Int, val range: Int, val upgradesTo: String, val special: String = "") {
+class Tower(val id: String, val name: String, val image: BufferedImage, val cost: Int, val speed: Int, val damage: Int, val range: Int, val upgradesTo: String, val special: String = "") {
 
   var x = 0
   var y = 0
@@ -34,12 +34,12 @@ class Tower(val name: String, val image: BufferedImage, val cost: Int, val speed
         }
       })
     } else if (special.take(4) == "slow") {
-      Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range * 1.5 && a._1 <= 0).headOption match {
+      Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range + 16 && a._1 <= 0).headOption match {
         case a: Some[(Int, Enemy)] => a.get._2.HP -= damage; a.get._2.slow = special.drop(4).toInt; reload = speed
         case None => 
       }
     } else {
-      Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range * 1.5 && a._1 <= 0).headOption match {
+      Manager.currentStage.waves.head.enemyList.filter(a => Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)) < range + 16 && a._1 <= 0).headOption match {
         case a: Some[(Int, Enemy)] => a.get._2.HP -= damage; reload = speed
         case None => 
       }
@@ -49,13 +49,16 @@ class Tower(val name: String, val image: BufferedImage, val cost: Int, val speed
 
   def isUpgradeable: Boolean = upgradesTo != null
   def upgradeCost: Int = if (isUpgradeable) Tower.loadTower(upgradesTo).getCost - cost else -1
+  def upgrade = {
+    ???
+  }
+  
   def setCoordinates(pos: Tile) = {
     x = pos.center._1
     y = pos.center._2
   }
 
   def update = {
-    println(Manager.currentStage.waves.head.enemyList.foreach(a => println(Math.sqrt(Math.pow(a._2.x - x, 2) + Math.pow(a._2.y - y, 2)))))
     if (this.reload > 0)
       this.reload -= 1
     else shoot
@@ -105,7 +108,7 @@ object Tower {
             if (temp.contains("id") && temp.contains("name") && temp.contains("image") && temp.contains("cost") && temp.contains("speed")
               && temp.contains("damage") && temp.contains("range") && temp.contains("upgrade") && temp.contains("special"))
               try {
-                towers += temp("id") -> new Tower(temp("name"), ImageIO.read(new File(".\\images\\" + temp("image"))),
+                towers += temp("id") -> new Tower(temp("id"), temp("name"), ImageIO.read(new File(".\\images\\" + temp("image"))),
                   Integer.parseInt(temp("cost")), Integer.parseInt(temp("speed")), Integer.parseInt(temp("damage")),
                   Integer.parseInt(temp("range")), temp("upgrade"), temp("special"))
               } catch {

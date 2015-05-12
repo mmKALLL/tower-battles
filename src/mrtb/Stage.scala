@@ -33,11 +33,30 @@ class Stage {
   def setWaves(in: Buffer[Wave]) = waves = in
   def setTowers(in: Buffer[Tower]) = availableTowers = in
   def getCurrentWave: Wave = waves.head
-  def placeTower(id: String, x: Int, y: Int) = {
-    tiles(x - 1)(y - 1).setTower(Tower.loadTower(id))
-    tiles(x - 1)(y - 1).getTower.x = tiles(x - 1)(y - 1).center._1
-    tiles(x - 1)(y - 1).getTower.y = tiles(x - 1)(y - 1).center._2
-    towers += tiles(x - 1)(y - 1).getTower
+
+  def placeTower(id: String, x: Int, y: Int, finalize: Boolean): Boolean = {
+    if (gold >= Tower.loadTower(id).cost && tiles(x - 1)(y - 1).getTower == null) {
+      gold -= Tower.loadTower(id).cost
+      val tile = tiles(x - 1)(y - 1)
+      tile.setTower(Tower.loadTower(id))
+      if (Enemy.findShortestPath(tiles)) {
+        if (!finalize) {
+          gold += Tower.loadTower(id).cost
+          tile.setTower(null)
+          Enemy.findShortestPath(tiles)
+          true
+        } else {
+          tile.getTower.setCoordinates(tile)
+          towers += tiles(x - 1)(y - 1).getTower
+          true
+        }
+      } else {
+        gold += Tower.loadTower(id).cost
+        tile.setTower(null)
+        Enemy.findShortestPath(tiles)
+        false
+      }
+    } else false
   }
 
   def startWave = {
@@ -184,7 +203,6 @@ object Stage {
                   } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
                 }
               }
-              println(res.enemyList)
               s = r.readLine()
             }
             waves += res
@@ -220,6 +238,7 @@ object Stage {
     result.gold = waves(0).goldbonus
     result.lives = waves(0).lifebonus
     result.phaseTime = waves(0).buildphase
+    result.setTowers(towers)
     result
   }
 

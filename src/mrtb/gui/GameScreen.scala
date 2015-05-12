@@ -15,6 +15,7 @@ import java.awt.event.ActionListener
 import java.awt.image.BufferedImage
 import scala.swing.Dialog
 import mrtb._
+import scala.swing.Publisher
 
 /**
  * A Panel that uses Graphics2D to paint the wanted images etc.
@@ -44,8 +45,12 @@ object GameScreen extends Panel {
   private val gridWidth = GUI.manager.GRIDSIZE._1
   private val gridHeight = GUI.manager.GRIDSIZE._2
 
+  private var towers: Array[Tower] = null
+  private var selection = 0
+
   private val fm_SSP14 = this.peer.getFontMetrics(new Font("SansSerif", Font.PLAIN, 14))
   private val fm_SSB14 = this.peer.getFontMetrics(new Font("SansSerif", Font.BOLD, 14))
+  class DialogDrawEvent extends Event
   //  private val bg = new BufferedImage(800, 480, BufferedImage.TYPE_INT_RGB)
   //  private val g2 = bg.createGraphics()
   //  this.drawBackground
@@ -79,7 +84,9 @@ object GameScreen extends Panel {
         g.setColor(new Color(230, 255, 255))
         g.fillRect(0, 0, size.width, size.height)
         // For some reason, this doesn't work properly. \\\\\\TODO\\\\\\ aaa
+        publish(new DialogDrawEvent)
         Dialog.showMessage(this, "You lost!", "Game over! Score: " + GUI.manager.currentStage.score)
+        println("Game ended, exiting...")
         System.exit(0)
       }
 
@@ -105,7 +112,7 @@ object GameScreen extends Panel {
         g.setColor(new Color(140, 255, 140))
         g.fillRect(tileSize * gridWidth, tileSize * (gridHeight / 2 + 1), tileSize, tileSize)
 
-        // The game grid itself is squared in.
+        // The game grid itself is squared in, along with tower selector.
         g.setColor(new Color(215, 215, 215))
         for (x <- 1 until GUI.manager.GRIDSIZE._1) {
           g.drawLine(tileSize * (x + 1), tileSize, tileSize * (x + 1), tileSize * (gridHeight + 1))
@@ -113,6 +120,10 @@ object GameScreen extends Panel {
         for (y <- 1 until GUI.manager.GRIDSIZE._2) {
           g.drawLine(tileSize, tileSize * (y + 1), tileSize * (gridWidth + 1), tileSize * (y + 1))
         }
+        g.drawLine(size.width - 110, 122, size.width - 110, 322)
+        g.drawLine(size.width - 70, 122, size.width - 70, 322)
+        for (y <- 1 to 4)
+          g.drawLine(size.width - 150, 122 + 40 * y, size.width - 30, 122 + 40 * y)
 
         // Borders are added to the major UI elements.
         g.setColor(new Color(45, 45, 45))
@@ -140,11 +151,18 @@ object GameScreen extends Panel {
 
         // The game field is drawn
         //todo
-
         Manager.currentStage.getCurrentWave.enemyList.foreach(
           a => if (a._1 <= 0) g.drawImage(a._2.image, null, a._2.x + Manager.TILESIZE - a._2.image.getWidth() / 2, a._2.y + Manager.TILESIZE - a._2.image.getHeight() / 2))
         Manager.currentStage.tiles.flatten.foreach(
           a => if (!a.isEmpty) g.drawImage(a.getTower.image, null, a.leftEdge._1 + Manager.TILESIZE + 1, a.upperEdge._2 + Manager.TILESIZE + 1))
+
+        // The UI elements are drawn
+        for (x <- 0 until Math.min(towers.size, 15)) {
+          g.drawImage(towers(x).image, null, size.width - 150 + (x % 3 * 40) + 6, x / 3 * 40 + 126)
+        }
+          
+        // The tower selection is drawn
+        // todo
       }
 
       case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")
@@ -157,6 +175,7 @@ object GameScreen extends Panel {
   }
 
   def clear(g: Graphics2D) = {
+    g.setStroke(new BasicStroke(1))
     g.setColor(new Color(230, 255, 255))
     g.fillRect(0, 0, size.width, size.height)
   }
@@ -172,16 +191,17 @@ object GameScreen extends Panel {
 
   // The event handlers; the most important ones are without a doubt MouseClicked, 
   // MouseMoved and KeyTyped. Pattern matching is used to determine type and results.
-  this.listenTo(mouse.clicks, mouse.moves, keys)
+  this.listenTo(mouse.clicks, mouse.moves, keys, this)
 
   this.reactions += {
     case b: MouseReleased => {
-      GUI.manager.gameState.take(4) match {
+      GUI.manager.gameState match {
         case "menu" => {
           if (GUI.manager.debug) println("reacted to MouseReleased in-menu; " + b)
           if (b.point.x > 200 && b.point.x < 400 && b.point.y < 40 * GUI.manager.stagelist.size && b.point.y > 10) {
             try {
-              GUI.manager.loadStage(GUI.manager.stagelist.keys.take((b.point.y + 40) / 40).last)
+              GUI.manager.loadStage(GUI.manager.stagelist.keys.take(((b.point.y + 10) / 40) + 1).last)
+              towers = Manager.currentStage.availableTowers.toArray
             } catch {
               case e: IllegalArgumentException =>
                 Dialog.showMessage(this, "You tried to open a stage that is incompatible with the game! Parser is version 1.0.", "Error!"); e.printStackTrace()
@@ -193,10 +213,21 @@ object GameScreen extends Panel {
           }
         }
 
-        case "game" => {
-          //todo
+        case "game_setup" => {
+          if (b.point.x > size.width - 150 && b.point.x < size.width - 30 && b.point.y > 122 && b.point.y < 322) {
+            this.selection = (b.point.x - (size.width - 150)) / 40 + 3 * ((b.point.y - 122) / 40)
+          } else if (selection >= 0) {
+            if (b.point.x > 32 && b.point.x < (Manager.GRIDSIZE._1 + 1) * Manager.TILESIZE && b.point.y > 32 && b.point.y < (Manager.GRIDSIZE._2 + 1) * Manager.TILESIZE) {
+              if (Manager.currentStage.placeTower(towers(selection).id, (b.point.x) / Manager.TILESIZE, (b.point.y) / Manager.TILESIZE, false))
+                Manager.currentStage.placeTower(towers(selection).id, (b.point.x) / Manager.TILESIZE, (b.point.y) / Manager.TILESIZE, true)
+            }
+          }
         }
 
+        case "game_wave" => {
+          
+        }
+        
         case "over" =>
 
         case "end" =>
@@ -206,6 +237,16 @@ object GameScreen extends Panel {
         case _ => throw new Exception("Exception 0001 - GUI component \"GameScreen\" has illegal state.")
       }
       repaint()
+    }
+    
+    case m: MouseMoved => {
+      
+    }
+    
+    case k: KeyPressed => {
+      if (Manager.gameState.take(4) == "game") {
+        selection = 0
+      }
     }
   }
 

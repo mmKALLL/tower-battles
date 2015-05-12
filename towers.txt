@@ -124,7 +124,7 @@ speed=20
 damage=10
 range=50
 upgrade=slowingtower2
-special=slow
+special=slow20
 
 !definetower
 id=slowingtower2
@@ -135,4 +135,4 @@ speed=60
 damage=15
 range=50
 upgrade=null
-special=slow,aoe
+special=slow40

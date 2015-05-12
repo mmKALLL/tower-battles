@@ -25,7 +25,7 @@ object Manager {
   final val VERSION = "1.0"
 
   // Variables to hold the game system's internal state.
-  // Possible gamestates: init, menu, game_setup, game_wave, over
+  // Possible gamestates: init, menu, game_setup, game_wave, over, end
   var gameState = "init"
   // stagelist maps each stage id to its file and an array containing its info (map name, creator name, description)
   var stagelist: Map[String, (File, Array[String])] = null

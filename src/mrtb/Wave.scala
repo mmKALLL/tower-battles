@@ -34,7 +34,6 @@ class Wave(position: Int) {
       }
     }
     for (x <- 0 until enemyList.length) {
-      println(enemyList(x)._2.HP)
       enemyList(x) = (enemyList(x)._1 - 1, enemyList(x)._2)
     }
   }
