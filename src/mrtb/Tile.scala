@@ -13,7 +13,7 @@ class Tile (x: Int, y: Int, initialTower: Tower = null) {
   private var placedTower: Tower = initialTower
   
   def isEmpty: Boolean = placedTower == null
-  def containsEnemies: Boolean = ??? // needed when towers can be places while enemies on screen
+  def containsEnemies: Boolean = ??? // needed when towers can be placed while enemies on screen
   
   def getTower: Tower = placedTower
   def setTower(tower: Tower) = placedTower = tower

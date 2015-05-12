@@ -263,7 +263,10 @@ object GameScreen extends Panel {
           // If a tower is selected
           if (b.point.x > size.width - 150 && b.point.x < size.width - 30 && b.point.y > 122 && b.point.y < 322) {
             this.selection = (b.point.x - (size.width - 150)) / 40 + 3 * ((b.point.y - 122) / 40)
-            // If the game field is clicked
+            if (selection >= towers.length)
+              selection = -1
+
+          // If the game field is clicked
           } else if (b.point.x > 32 && b.point.x < (Manager.GRIDSIZE._1 + 1) * Manager.TILESIZE && b.point.y > 32 && b.point.y < (Manager.GRIDSIZE._2 + 1) * Manager.TILESIZE) {
             if (selection >= 0) {
               if (Manager.currentStage.placeTower(towers(selection), (b.point.x) / Manager.TILESIZE, (b.point.y) / Manager.TILESIZE, false))

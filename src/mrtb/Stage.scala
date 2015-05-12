@@ -38,7 +38,7 @@ class Stage {
   def placeTower(in: Tower, x: Int, y: Int, finalize: Boolean): Boolean = {
     val tower = new Tower(in.id, in.name, in.image, in.cost, in.speed, in.damage, in.range, in.upgradesTo, in.special: String)
     
-    if (gold >= tower.cost && tiles(x - 1)(y - 1).getTower == null) {
+    if (gold >= tower.cost && tiles(x - 1)(y - 1).getTower == null && !(y == 6 && (x == 1 || x == 18))) {
       gold -= tower.cost
       val tile = tiles(x - 1)(y - 1)
       tile.setTower(tower)
