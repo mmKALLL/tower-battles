@@ -207,7 +207,7 @@ object Stage {
                           for (x <- 1 to temp(1).toInt) {
                             res.addEnemy(enemy, temp(3).toInt + temp(2).toInt * x)
                           }
-                        } catch { case _: Throwable => if (Manager.debug) println("enemy define in wave #" + waves.length + 1 + "is invalid") }
+                        } catch { case _: Throwable => if (Manager.debug) println("enemy define in wave #" + waves.length + 1 + "is invalid"); Manager.stageOK = false }
 
                       } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
                     } else if (Manager.debug) println("an invalid enemy series defined in wave #" + waves.length + 1 + ", ignoring")
