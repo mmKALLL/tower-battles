@@ -20,12 +20,13 @@ slowblob,12,40,0
 greengoblin,12,40,500
 slowblob,8,60,1000
 greengoblin,8,60,1030
+slowblog,25,30,1450
 greengoblin,30,15,2350
 slowblob,40,15,2800
-greengoblin,195,10,3610
-slowblob,195,10,3605
+greengoblin,195,10,3410
+slowblob,195,10,3405
 
 
 # High scores are not implemented yet.
 !highscores
-Esa=5000
+mmKALLL=5000

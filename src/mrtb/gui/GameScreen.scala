@@ -42,7 +42,6 @@ import java.awt.event.MouseListener
 object GameScreen extends Panel {
 
   // Some private variables for convenience.
-  private var dialogOpen = false
   private val tileSize = GUI.manager.TILESIZE
   private val gridWidth = GUI.manager.GRIDSIZE._1
   private val gridHeight = GUI.manager.GRIDSIZE._2
@@ -51,17 +50,18 @@ object GameScreen extends Panel {
   private var selection = -1
   private var point = new java.awt.Point(0, 0)
 
-  // Three queues that handle the shooting effects; first parameter is width, the others are x1, y1, x2, y2
+  // Three queues that handle the lasting shot effects; first parameter is width, the others are x1, y1, x2, y2
   private var oneFrameShots: Queue[(Int, Int, Int, Int, Int)] = Queue()
   private var twoFrameShots: Queue[(Int, Int, Int, Int, Int)] = Queue()
   var threeFrameShots: Queue[(Int, Int, Int, Int, Int)] = Queue()
+  def clearShots = { oneFrameShots.clear; twoFrameShots.clear; threeFrameShots.clear }
 
   private val fm_SSP14 = this.peer.getFontMetrics(new Font("SansSerif", Font.PLAIN, 14))
   private val fm_SSB14 = this.peer.getFontMetrics(new Font("SansSerif", Font.BOLD, 14))
   private val as = 0
 
   // A class used for dialog drawing outside of repaints.
-  class DialogDrawEvent extends Event
+  class DialogDrawEvent(val msg: String, val title: String) extends Event
 
   // Used for benchmarking the repaint.
   private var renderTimeTotal = 0L
@@ -86,7 +86,7 @@ object GameScreen extends Panel {
           g.fillRect(200, 10 + 40 * x._2, 200, 30)
           g.setColor(new Color(0, 0, 0))
           g.drawRect(200, 10 + 40 * x._2, 200, 30)
-          g.drawString(x._1, 215, 28 + 40 * x._2)
+          g.drawString(x._1, 215, 31 + 40 * x._2)
         }
       }
 
@@ -94,14 +94,12 @@ object GameScreen extends Panel {
         Manager.gameState = "end"
         g.setColor(new Color(230, 255, 255))
         g.fillRect(0, 0, size.width, size.height)
-        // For some reason, this doesn't work properly. \\\\\\TODO\\\\\\ aaa
-        publish(new DialogDrawEvent)
-        Dialog.showMessage(this, "You lost!", "Game over! Score: " + GUI.manager.currentStage.score)
+        publish(new DialogDrawEvent("Game over! Score: " + GUI.manager.currentStage.score, "You lost! Score: " + GUI.manager.currentStage.score))
         println("Game ended, exiting...")
         System.exit(0)
       }
 
-      case "end" =>
+      case "end" => System.exit(0)
 
       case "beat" => {
         //todo
@@ -183,13 +181,43 @@ object GameScreen extends Panel {
         }
 
         // The wave display
-        Manager.currentStage.waves.take(5).foreach(a => {
+        g.setFont(new Font("SansSerif", Font.BOLD, 16))
+        if (Manager.currentStage.waves.length > 1)
+          for (x <- Manager.currentStage.waves.take(4)) {
+            g.setColor(x.descriptionC)
+            g.fillRect(tileSize + 8 + (x.position - Manager.currentStage.getCurrentWave.position) * 128, tileSize * (gridHeight + 1) + 28, 120, 30)
+            g.setColor(new Color(0, 0, 0))
+            g.drawRect(tileSize + 8 + (x.position - Manager.currentStage.getCurrentWave.position) * 128, tileSize * (gridHeight + 1) + 28, 120, 30)
+            g.drawString(x.descriptionS, tileSize + 15 + (x.position - Manager.currentStage.getCurrentWave.position) * 128, tileSize * (gridHeight + 1) + 48)
+          }
+        else {
+          g.setColor(Manager.currentStage.getCurrentWave.descriptionC)
+          g.fillRect(tileSize + 8 + (Manager.currentStage.getCurrentWave.position - Manager.currentStage.getCurrentWave.position) * 128, tileSize * (gridHeight + 1) + 28, 120, 30)
           g.setColor(new Color(0, 0, 0))
-          g.setColor(a.descriptionC)
-          // TODO:qas
-        })
+          g.drawRect(tileSize + 8 + (Manager.currentStage.getCurrentWave.position - Manager.currentStage.getCurrentWave.position) * 128, tileSize * (gridHeight + 1) + 28, 120, 30)
+          g.drawString(Manager.currentStage.getCurrentWave.descriptionS, tileSize + 15 + (Manager.currentStage.getCurrentWave.position - Manager.currentStage.getCurrentWave.position) * 128, tileSize * (gridHeight + 1) + 48)
+        }
+        if (Manager.gameState == "game_setup") {
+          g.drawRect(554, tileSize * (gridHeight + 1) + 28, 44, 30)
+          g.drawString("Skip", 559, tileSize * (gridHeight + 1) + 48)
+        }
 
-        // The shots are drawn and displayed for three frames; a very... crude... solution, but it works. 
+        // The selection display ; TODO: streamline the coordinates
+        if (selection >= 0) {
+          g.setFont(new Font("SansSerif", Font.BOLD, 14))
+          g.setColor(new Color(0, 0, 0))
+          g.drawString("Name:", this.peer.getWidth() - 140, 350 + fm_SSB14.getHeight() / 2)
+          g.drawString("Cost:", this.peer.getWidth() - 140, 350 + fm_SSB14.getHeight() * 5 / 2)
+          g.drawString("Speed:", this.peer.getWidth() - 140, 350 + fm_SSB14.getHeight() * 7 / 2)
+          g.drawString("Damage:", this.peer.getWidth() - 140, 350 + fm_SSB14.getHeight() * 9 / 2)
+          g.setFont(new Font("SansSerif", Font.PLAIN, 14))
+          g.drawString(towers(selection).name, this.peer.getWidth() - 140, 350 + fm_SSB14.getHeight() * 3 / 2)
+          g.drawString(towers(selection).cost.toString, size.width - 40 - fm_SSP14.stringWidth(towers(selection).cost.toString), 350 + fm_SSB14.getHeight() * 5 / 2)
+          g.drawString(towers(selection).speed.toString, size.width - 40 - fm_SSP14.stringWidth(towers(selection).speed.toString), 350 + fm_SSB14.getHeight() * 7 / 2)
+          g.drawString(towers(selection).damage.toString, size.width - 40 - fm_SSP14.stringWidth(towers(selection).damage.toString), 350 + fm_SSB14.getHeight() * 9 / 2)
+        }
+
+        // The shots are drawn and displayed for three frames; a very... crude... solution, but it somewhat works. 
         var temp = (0, 0, 0, 0, 0)
         g.setColor(new Color(165, 85, 5))
         if (oneFrameShots.length > 1)
@@ -248,12 +276,15 @@ object GameScreen extends Panel {
 
   this.reactions += {
     case b: MouseReleased => {
+      // Right click removes tower selection
+      if (b.peer.getButton() == java.awt.event.MouseEvent.BUTTON2 || b.peer.getButton() == java.awt.event.MouseEvent.BUTTON3)
+        selection = -1
       GUI.manager.gameState match {
         case "menu" => {
           if (GUI.manager.debug) println("reacted to MouseReleased in-menu; " + b)
-          if (b.point.x > 200 && b.point.x < 400 && b.point.y < 40 * GUI.manager.stagelist.size && b.point.y > 10) {
+          if (b.point.x > 200 && b.point.x < 400 && b.point.y < 40 * GUI.manager.stagelist.size && b.point.y > 10 && (b.point.y - 10) % 40 <= 30) {
             try {
-              GUI.manager.loadStage(GUI.manager.stagelist.keys.take(((b.point.y + 10) / 40) + 1).last)
+              GUI.manager.loadStage(GUI.manager.stagelist.keys.take(((b.point.y) / 40) + 1).last)
               towers = Manager.currentStage.availableTowers.toArray
             } catch {
               case e: IllegalArgumentException =>
@@ -262,16 +293,13 @@ object GameScreen extends Panel {
                 Dialog.showMessage(this, "You tried to open a stage that contains no compatible waves! Parser is version 1.0.", "Error!"); e.printStackTrace()
               case e: Throwable => Dialog.showMessage(this, "You tried to open a stage, but there was an unknown error! Parser is version 1.0.\n" + e, "Error!"); e.printStackTrace()
             }
-            if (GUI.manager.debug) println("opening stage \"" + GUI.manager.currentStage + "\", proceeding to game...")
+            if (GUI.manager.debug) println("opening stage \"" + GUI.manager.currentStage.name + "\", proceeding to game...")
           }
         }
 
         case "game_setup" => {
-          // Right click removes tower selection
-          if (b.peer.getButton() == java.awt.event.MouseEvent.BUTTON2 || b.peer.getButton() == java.awt.event.MouseEvent.BUTTON3)
-            selection = -1
-          // If the tower selector is clicked, select the one
-          else if (b.point.x > size.width - 150 && b.point.x < size.width - 30 && b.point.y > 122 && b.point.y < 322) {
+          // If the tower selector is clicked, select the correct one
+          if (b.point.x > size.width - 150 && b.point.x < size.width - 30 && b.point.y > 122 && b.point.y < 322) {
             this.selection = (b.point.x - (size.width - 150)) / 40 + 3 * ((b.point.y - 122) / 40)
             if (selection >= towers.length)
               selection = -1
@@ -284,8 +312,9 @@ object GameScreen extends Panel {
             } else if (false) {
               // todo: tower selection and upgrade
             }
-          } else if (false) {
-            // TODO: add skip to wave-button, speed-up, and other UI goodies
+            // If the skip button is clicked
+          } else if (Manager.gameState == "game_setup" && b.point.x > 554 && b.point.y > tileSize * (gridHeight + 1) + 28 && b.point.x < 554 + 44 && b.point.y < tileSize * (gridHeight + 1) + 28 + 30) {
+            Manager.currentStage.startWave
           }
         }
 
@@ -312,7 +341,7 @@ object GameScreen extends Panel {
       selection = -1
     }
 
-    case d: DialogDrawEvent => //todo
+    case d: DialogDrawEvent => { println(d.msg); Dialog.showMessage(this, d.msg, d.title); this.repaint }
   }
 
 }

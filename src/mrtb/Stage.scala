@@ -9,7 +9,7 @@ import java.io.FileReader
 /**
  * Represents a single game. The enemy waves and other info are read from external
  * files, and this class keeps track of the playfield's state as well as structures
- * containing the relevant enemies and towers.
+ * containing the relevant enemies, waves and towers.
  */
 
 class Stage {
@@ -72,6 +72,7 @@ class Stage {
   }
 
   def nextWave = {
+    mrtb.gui.GameScreen.clearShots // direct access like this is not advised, but...
     if (waves.length > 1) {
       waves = waves.drop(1)
       phaseStart = System.currentTimeMillis
@@ -81,13 +82,13 @@ class Stage {
       lives += waves.head.lifebonus
       Manager.gameState = "game_setup"
     } else {
-      Manager.gameState = "over"
-      println("You beat the game!")
+      println("You beat the game! Score: " + score)
+      Manager.gameState = "end"
     }
   }
 
   def loseLife(damage: Int) = {
-    lives -= 1
+    lives -= damage
     if (lives <= 0) {
       Manager.gameState = "over"
     }

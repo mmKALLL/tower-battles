@@ -34,7 +34,7 @@ slowblob,8,30,20
 
 !wave
 buildphase=15
-type=normal
+type=fast
 greengoblin,25,14,15
 
 # High scores are not implemented yet.

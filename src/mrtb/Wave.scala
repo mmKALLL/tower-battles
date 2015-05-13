@@ -3,7 +3,7 @@ package mrtb
 import java.awt.Color
 import scala.collection.mutable.Buffer
 
-class Wave(position: Int) {
+class Wave(val position: Int) {
 
   // An ordered list that tracks the time left to spawn a specific enemy in milliseconds.
   var enemyList = Buffer[(Int, Enemy)]()
