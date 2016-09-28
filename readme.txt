@@ -4,6 +4,8 @@ An extremely customizable tower defense game. Made in a fairly short timeframe. 
 
 Run with -debug program argument to enable debug messages in console.
 
+You can edit enemies.txt, towers.txt and the files found under the stages/ directory to modify the game without having to program anything!
+
 Very brief rundown on the classes:
 
 Manager - brings together all the program components
